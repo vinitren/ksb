@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KSB — Salgados & Burger · Cardápio</title>
+<meta name="theme-color" content="#0D0D0D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --carvao:#0D0D0D;
+    --vinho:#5C0E12;
+    --vinho-esc:#3A0A0A;
+    --vinho-sangue:#7A0E12;
+    --brasa:#F5B301;      /* dourado — preços e CTA */
+    --brasa-quente:#FF8A00;
+    --branco:#FFFFFF;
+    --fumaca:#c9b9b9;
+    --borda:rgba(245,179,1,.18);
+    --borda-card:rgba(255,120,120,.22);
+    --mono:'Space Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Poppins',system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 620px at 50% -12%, #7A0E12 0%, #3A0A0A 44%, #0D0D0D 80%),
+      var(--carvao);
+    background-attachment:fixed;
+    color:var(--branco);
+    min-height:100vh;
+    padding-bottom:120px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .anton{font-family:'Anton',sans-serif;font-weight:400}
+  :focus-visible{outline:3px solid var(--brasa);outline-offset:2px;border-radius:6px}
+
+  /* splatter de fundo sutil */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+    background:
+      radial-gradient(3px 3px at 12% 30%, rgba(122,14,18,.9) 40%, transparent 42%),
+      radial-gradient(2px 2px at 82% 18%, rgba(122,14,18,.8) 40%, transparent 42%),
+      radial-gradient(5px 5px at 68% 62%, rgba(92,14,18,.7) 40%, transparent 42%),
+      radial-gradient(2px 2px at 28% 78%, rgba(122,14,18,.8) 40%, transparent 42%),
+      radial-gradient(3px 3px at 92% 84%, rgba(92,14,18,.7) 40%, transparent 42%);
+  }
+
+  /* ---------- Header / Hero ---------- */
+  header{text-align:center;padding:40px 20px 24px;position:relative;overflow:hidden}
+  .brasa-glow{
+    position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+    width:320px;height:320px;border-radius:50%;pointer-events:none;z-index:0;
+    background:radial-gradient(circle, rgba(245,179,1,.28) 0%, rgba(255,138,0,.12) 35%, transparent 68%);
+    animation:pulso 4s ease-in-out infinite;
+  }
+  @keyframes pulso{0%,100%{opacity:.7;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.08)}}
+  .logo-img{position:relative;z-index:1;display:block;margin:0 auto;width:min(240px,64vw);height:auto;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55))}
+  .tagline{
+    position:relative;z-index:1;margin:18px auto 0;display:block;width:max-content;max-width:90%;
+    background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;
+    font-weight:800;font-size:12px;letter-spacing:1.5px;
+    padding:8px 18px;border-radius:999px;text-transform:uppercase;
+    box-shadow:0 6px 16px rgba(245,179,1,.28);
+  }
+  .hero-linha{position:relative;z-index:1;margin-top:16px;color:var(--fumaca);font-size:13.5px;font-weight:500}
+
+  /* ---------- Nav categorias ---------- */
+  nav{position:sticky;top:0;z-index:30;background:rgba(13,13,13,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--borda);padding:10px 0}
+  .nav-scroll{display:flex;gap:8px;overflow-x:auto;padding:0 16px;scrollbar-width:none;max-width:640px;margin:0 auto}
+  .nav-scroll::-webkit-scrollbar{display:none}
+  .nav-scroll a{flex:0 0 auto;text-decoration:none;color:var(--branco);font-weight:700;font-size:13px;padding:8px 15px;border-radius:999px;border:1px solid var(--borda-card);background:rgba(92,14,18,.35);white-space:nowrap;transition:.15s}
+  .nav-scroll a:active,.nav-scroll a:focus-visible{background:var(--brasa);color:#1a1200}
+
+  /* ---------- Seções ---------- */
+  main{max-width:640px;margin:0 auto;padding:8px 16px 0}
+  section{padding-top:30px;scroll-margin-top:66px}
+  .sec-titulo{font-family:'Anton',sans-serif;font-size:29px;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:11px;line-height:1}
+  .sec-titulo .emoji{font-size:25px}
+  .sec-titulo::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--borda-card),transparent)}
+  .sec-desc{color:var(--fumaca);font-size:13px;margin:5px 0 16px;font-weight:500}
+
+  /* ---------- Card produto ---------- */
+  .card{
+    background:linear-gradient(158deg,#5C0E12 0%, #46090c 100%);
+    border:1px solid var(--borda-card);border-radius:22px;
+    margin-bottom:16px;
+    box-shadow:0 10px 26px rgba(0,0,0,.35);
+    display:flex;flex-direction:column;position:relative;overflow:hidden;
+  }
+  .card::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,var(--brasa),transparent);opacity:.4;z-index:2}
+  /* foto no topo — fundo branco, produto recortado com zoom, sem corte */
+  .card .thumb{width:100%;height:clamp(210px,56vw,260px);background:#fff;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden;padding:8px 10px}
+  .card .thumb .foto{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.16))}
+  .card .thumb.noimg{background:radial-gradient(circle at 50% 40%, rgba(245,179,1,.15), rgba(0,0,0,.4)), linear-gradient(158deg,#5C0E12,#46090c)}
+  .card .info{padding:12px 16px 16px}
+  .card h3{font-size:16.5px;font-weight:800;letter-spacing:.3px;line-height:1.15}
+  .card .desc{color:var(--fumaca);font-size:12.5px;margin-top:4px;font-weight:500;line-height:1.35}
+  .card .preco{font-family:var(--mono);font-weight:700;color:var(--brasa);font-size:20px;margin-top:9px;letter-spacing:-.5px}
+  .card .preco small{font-family:'Poppins';font-size:11px;opacity:.75;font-weight:600;letter-spacing:0}
+
+  .btn-add{margin-top:11px;background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;border:none;font-family:'Poppins';font-weight:800;font-size:13.5px;padding:9px 18px;border-radius:999px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;box-shadow:0 4px 12px rgba(245,179,1,.25)}
+  .btn-add:active{transform:scale(.96)}
+  .btn-montar{background:transparent;color:var(--brasa);border:1.5px solid var(--brasa);box-shadow:none}
+
+  /* variantes */
+  .variantes{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+  .variante{display:flex;align-items:center;gap:9px;background:rgba(0,0,0,.28);border:1px solid var(--borda-card);border-radius:12px;padding:7px 10px 7px 12px}
+  .variante .v-nome{font-size:12.5px;font-weight:600}
+  .variante .v-preco{font-family:var(--mono);color:var(--brasa);font-weight:700;font-size:13px}
+  .variante button{background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;border:none;width:27px;height:27px;border-radius:8px;font-size:19px;font-weight:800;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+  .variante button:active{transform:scale(.9)}
+
+  /* ---------- Modal (combo) ---------- */
+  .overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.74);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
+  .overlay.open{display:flex}
+  .modal{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#5C0E12,#2e0709);border:1px solid var(--borda-card);border-radius:26px 26px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));animation:up .26s ease;position:relative}
+  @keyframes up{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+  .modal h2{font-family:'Anton';font-size:25px;text-transform:uppercase;letter-spacing:.5px}
+  .modal .m-sub{color:var(--fumaca);font-size:13px;margin:4px 0 16px;font-weight:500}
+  .grupo{margin-bottom:18px}
+  .grupo-tit{font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--brasa);margin-bottom:9px}
+  .opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;border:1.5px solid rgba(255,255,255,.08);background:rgba(0,0,0,.22);margin-bottom:8px;transition:.15s}
+  .opt.sel{border-color:var(--brasa);background:rgba(245,179,1,.1)}
+  .opt .radio{flex:0 0 20px;width:20px;height:20px;border-radius:50%;border:2px solid var(--fumaca);position:relative}
+  .opt.sel .radio{border-color:var(--brasa)}
+  .opt.sel .radio::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--brasa)}
+  .opt .o-nome{flex:1;font-weight:600;font-size:14px}
+  .opt .o-preco{font-family:var(--mono);color:var(--brasa);font-weight:700;font-size:13px}
+  .m-footer{position:sticky;bottom:0;margin:8px -18px -18px;padding:16px 18px;background:linear-gradient(180deg,rgba(46,7,9,0),#2e0709 32%)}
+  .btn-full{width:100%;background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;border:none;font-family:'Poppins';font-weight:800;font-size:16px;padding:15px;border-radius:16px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:center;gap:8px;align-items:center}
+  .btn-full:active{transform:scale(.98)}
+  .m-fechar{position:absolute;top:14px;right:16px;background:rgba(0,0,0,.4);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;z-index:2}
+
+  /* ---------- Barra carrinho ---------- */
+  .cart-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(13,13,13,.92);backdrop-filter:blur(12px);border-top:1px solid var(--borda);transform:translateY(120%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+  .cart-bar.show{transform:none}
+  .cart-btn{max-width:640px;margin:0 auto;width:100%;background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;border:none;border-radius:16px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Poppins';box-shadow:0 6px 20px rgba(245,179,1,.3);transition:transform .15s}
+  .cart-btn:active{transform:scale(.99)}
+  .cart-left{display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px}
+  .cart-count{background:#1a1200;color:var(--brasa);min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .cart-total{font-family:var(--mono);font-weight:700;font-size:19px}
+
+  /* ---------- COMANDA (checkout — assinatura) ---------- */
+  .comanda{
+    background:#141210;
+    border:1px solid rgba(245,179,1,.25);
+    border-radius:0 0 4px 4px;
+    padding:26px 20px calc(18px + env(safe-area-inset-bottom));
+    position:relative;font-family:var(--mono);
+    box-shadow:0 -6px 30px rgba(0,0,0,.5);
+  }
+  /* borda serrilhada (papel rasgado) no topo */
+  .comanda::before{
+    content:"";position:absolute;top:-11px;left:0;right:0;height:12px;
+    background:
+      linear-gradient(135deg,#141210 50%,transparent 51%) 0 0/16px 12px repeat-x,
+      linear-gradient(-135deg,#141210 50%,transparent 51%) 0 0/16px 12px repeat-x;
+  }
+  .comanda-carimbo{
+    position:absolute;top:16px;right:14px;transform:rotate(-11deg);
+    border:2.5px solid rgba(255,90,90,.55);color:rgba(255,90,90,.7);
+    font-weight:700;font-size:12px;letter-spacing:2px;padding:4px 10px;border-radius:6px;
+    text-transform:uppercase;pointer-events:none;
+  }
+  .comanda h2{font-family:'Anton';font-size:24px;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:2px}
+  .comanda .m-sub{font-family:'Poppins';color:var(--fumaca);font-size:12.5px;margin:0 0 14px;font-weight:500}
+  .tracejado{border:none;border-top:2px dashed rgba(245,179,1,.3);margin:12px 0}
+  .ci{display:flex;gap:10px;padding:11px 0;align-items:flex-start;border-bottom:1px dotted rgba(255,255,255,.12)}
+  .ci .ci-info{flex:1;min-width:0}
+  .ci .ci-topo{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .ci .ci-nome{font-weight:700;font-size:13.5px;color:#fff;text-transform:uppercase;letter-spacing:.3px}
+  .ci .ci-preco{color:var(--brasa);font-weight:700;font-size:13.5px;white-space:nowrap}
+  .ci .ci-det{color:var(--fumaca);font-size:11px;margin-top:4px;line-height:1.45;font-family:'Poppins'}
+  .ci .mini-step{display:inline-flex;align-items:center;background:rgba(0,0,0,.4);border-radius:8px;border:1px solid var(--borda-card);margin-top:7px}
+  .ci .mini-step button{background:none;border:none;color:var(--brasa);width:28px;height:26px;font-size:16px;font-weight:700;cursor:pointer}
+  .ci .mini-step span{min-width:20px;text-align:center;font-weight:700;font-size:13px}
+  .campo{margin:16px 0 6px;font-family:'Poppins'}
+  .campo label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}
+  .campo input,.campo textarea{width:100%;padding:14px;border-radius:12px;font-size:15px;font-family:var(--mono);background:rgba(0,0,0,.4);border:1.5px dashed var(--borda-card);color:#fff}
+  .campo textarea{resize:vertical;min-height:54px;line-height:1.4}
+  .campo input:focus,.campo textarea:focus{outline:none;border-color:var(--brasa);border-style:solid}
+  .campo .opc{font-weight:500;color:var(--fumaca)}
+  .pag-opts{display:flex;gap:8px;flex-wrap:wrap}
+  .pag-opt{flex:1;min-width:92px;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;border-radius:12px;cursor:pointer;border:1.5px solid var(--borda-card);background:rgba(0,0,0,.35);font-family:'Poppins';font-weight:700;font-size:13px;text-align:center;transition:.15s}
+  .pag-opt.sel{border-color:var(--brasa);background:rgba(245,179,1,.12);color:var(--brasa)}
+  .pag-opt:active{transform:scale(.97)}
+  .pix-card{background:rgba(245,179,1,.08);border:1.5px dashed var(--brasa);border-radius:12px;padding:12px 14px}
+  .pix-label{font-family:'Poppins';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brasa);margin-bottom:6px}
+  .pix-chave{display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .pix-chave span{font-family:var(--mono);font-weight:700;font-size:14px;color:#fff;word-break:break-all}
+  .pix-chave button{flex:0 0 auto;background:var(--brasa);color:#1a1200;border:none;font-family:'Poppins';font-weight:800;font-size:12px;padding:7px 12px;border-radius:8px;cursor:pointer;text-transform:uppercase}
+  .pix-chave button:active{transform:scale(.94)}
+  .pix-obs{font-family:'Poppins';font-size:11.5px;color:var(--fumaca);margin-top:8px}
+  .resumo-total{display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:1px}
+  .resumo-total .rt-val{font-size:26px;color:var(--brasa)}
+  .comanda .obs-frete{font-family:'Poppins';text-align:center;color:var(--fumaca);font-size:12px;margin:12px 0 4px}
+  .comanda .btn-full{border-radius:14px;margin-top:6px}
+  .cart-vazio{text-align:center;color:var(--fumaca);padding:34px 10px;font-weight:500;font-family:'Poppins'}
+
+  footer{text-align:center;padding:38px 20px 10px;color:var(--fumaca);font-size:12px}
+  footer .canais{font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:6px}
+  footer .bordao{color:var(--brasa);font-family:'Anton';font-size:17px;margin-top:8px;letter-spacing:.5px}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brasa-glow" aria-hidden="true"></div>
+  <img class="logo-img" src="img/logo.png" alt="KSB — Krocs Salgados & Burger">
+  <div class="tagline">🔥 Peça sem sair de casa!</div>
+  <div class="hero-linha">Monte seu pedido aqui e mande direto no nosso WhatsApp 🍔</div>
+</header>
+
+<nav>
+  <div class="nav-scroll">
+    <a href="#lanches">🍔 Lanches</a>
+    <a href="#combos">🎯 Combos</a>
+    <a href="#petiscos">🍟 Petiscos</a>
+    <a href="#sobremesas">🍩 Sobremesas</a>
+    <a href="#bebidas">🥤 Bebidas</a>
+  </div>
+</nav>
+
+<main id="menu"><!-- render via JS --></main>
+
+<footer>
+  <div class="canais">WHATSAPP · IFOOD · 99FOOD</div>
+  <div>KSB — Salgados &amp; Burger</div>
+  <div class="bordao">PEÇA SEM SAIR DE CASA!</div>
+</footer>
+
+<!-- Barra do carrinho -->
+<div class="cart-bar" id="cartBar">
+  <button class="cart-btn" onclick="abrirCarrinho()">
+    <span class="cart-left"><span class="cart-count" id="cartCount">0</span> Ver pedido</span>
+    <span class="cart-total" id="cartTotal">R$ 0,00</span>
+  </button>
+</div>
+
+<!-- Overlay (combo + comanda) -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBox"><!-- dinâmico --></div>
+</div>
+
+<script>
+/* ================= DADOS ================= */
+const WHATSAPP = "5541995341284";
+const PIX_CHAVE = "Krocsalimentos@gmail.com"; // chave PIX (e-mail)
+
+const LANCHES = [
+  {id:"classic", nome:"KROC CLASSIC", desc:"Pão brioche, molho da casa, hambúrguer 100g e cheddar fatiado.", preco:18.90, emoji:"🍔", img:"kroc-classic"},
+  {id:"salad",   nome:"KROC SALAD",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, alface e tomate.", preco:20.90, emoji:"🥗", img:"kroc-salad"},
+  {id:"bacon",   nome:"KROC BACON",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado e bacon.", preco:21.90, emoji:"🥓", img:"kroc-bacon"},
+  {id:"texas",   nome:"KROC TEXAS",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, bacon, Doritos e molho barbecue.", preco:23.90, emoji:"🌶️", img:"kroc-texas"},
+  {id:"turbo",   nome:"KROC TURBO",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, alface, tomate e bacon.", preco:23.90, emoji:"⚡", img:"kroc-turbo"},
+  {id:"duplo",   nome:"KROC DUPLO",   desc:"Pão brioche, molho da casa, 2 hambúrgueres 100g e cheddar fatiado.", preco:25.00, emoji:"🍔", img:"kroc-duplo"},
+];
+
+const LANCHE_COMBO = [
+  {id:"classic", nome:"KROC CLASSIC", extra:0},
+  {id:"salad",   nome:"KROC SALAD",   extra:0},
+  {id:"bacon",   nome:"KROC BACON",   extra:2.99},
+  {id:"texas",   nome:"KROC TEXAS",   extra:3.99},
+  {id:"turbo",   nome:"KROC TURBO",   extra:3.99},
+  {id:"duplo",   nome:"KROC DUPLO",   extra:5.00},
+];
+
+const COMBOS = [
+  {id:"individual", nome:"COMBO INDIVIDUAL", base:35.00, emoji:"🎯", img:"combo-individual",
+   desc:"1 lanche + 30 mini salgadinhos ou batata + 1 refri lata", lanches:1,
+   acomp:[{id:"coxinha", nome:"30 mini salgadinhos variados"},{id:"batata", nome:"Batata frita individual"}],
+   bebida:"1 refri lata 350ml"},
+  {id:"casal", nome:"COMBO CASAL", base:59.90, emoji:"❤️", img:"combo-casal",
+   desc:"2 lanches + 50 mini salgadinhos ou batata + 2 refri lata", lanches:2,
+   acomp:[{id:"coxinha", nome:"50 mini salgadinhos variados"},{id:"batata", nome:"Batata frita média"}],
+   bebida:"2 refri lata 350ml"},
+];
+
+const PETISCOS = [
+  {id:"salgadinhos", nome:"Mini salgadinhos variados", desc:"São mini mesmo! Variados.", emoji:"🥟", img:"mini-salgadinhos",
+   variantes:[{nome:"15 un", preco:12.00},{nome:"30 un", preco:20.00},{nome:"50 un", preco:24.00},{nome:"100 un", preco:39.90}]},
+  {id:"batata", nome:"Batata frita", desc:"Porção crocante de 300g.", emoji:"🍟", img:"batata-frita",
+   variantes:[{nome:"Tradicional", preco:15.00},{nome:"Bacon ou cheddar", preco:17.90},{nome:"Bacon e cheddar", preco:20.00}]},
+];
+
+const SOBREMESAS = [
+  {id:"churritos", nome:"Churritos + doce de leite", desc:"Pra mergulhar! 🤤", emoji:"🥨", img:"churritos",
+   variantes:[{nome:"10 un + 1 doce", preco:9.90},{nome:"20 un + 2 doces", preco:17.00},{nome:"30 un + 3 doces", preco:25.00}]},
+];
+
+const BEBIDAS = [
+  {id:"refri", nome:"Refrigerante lata", desc:"350ml · consulte os sabores.", preco:7.00, emoji:"🥤", img:"refrigerante"},
+  {id:"agua",  nome:"Água mineral", desc:"Sem gás.", preco:3.50, emoji:"💧", img:"agua"},
+];
+
+/* ================= ESTADO ================= */
+let cart = [];
+let nomeSalvo = "";
+let enderecoSalvo = "";
+let obsSalvo = "";
+let pagamentoSalvo = "";
+let trocoSalvo = "";
+
+/* ================= HELPERS ================= */
+const brl = n => "R$ " + n.toFixed(2).replace(".", ",");
+const el = (html) => { const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; };
+const esc = s => (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+// thumb com foto real + fallback (jpg → png → emoji)
+function thumb(p){
+  if(!p.img) return `<div class="thumb noimg">${p.emoji}</div>`;
+  return `<div class="thumb">
+    <img class="foto" src="img/${p.img}.png" data-jpg="img/${p.img}.jpg" data-emoji="${p.emoji}"
+         alt="${p.nome}" loading="lazy" onerror="fotoErro(this)">
+  </div>`;
+}
+function fotoErro(img){
+  if(img.dataset.jpg){ const alt = img.dataset.jpg; img.removeAttribute("data-jpg"); img.src = alt; return; }
+  const box = img.parentElement; box.classList.add("noimg"); box.innerHTML = img.dataset.emoji; // sem foto → emoji no fundo escuro
+}
+
+/* ================= RENDER MENU ================= */
+function render(){
+  const m = document.getElementById("menu");
+  m.innerHTML = "";
+  m.appendChild(sectionHeader("lanches","🍔","Lanches Kroc","Artesanais, feitos na hora 🔥"));
+  LANCHES.forEach(p => m.appendChild(cardSimples(p)));
+  m.appendChild(sectionHeader("combos","🎯","Combos","Mais barato junto — e dá pra dividir."));
+  COMBOS.forEach(c => m.appendChild(cardCombo(c)));
+  m.appendChild(sectionHeader("petiscos","🍟","Petiscos","Escolha o tamanho."));
+  PETISCOS.forEach(p => m.appendChild(cardVariante(p)));
+  m.appendChild(sectionHeader("sobremesas","🍩","Sobremesas","Pra fechar com chave de ouro."));
+  SOBREMESAS.forEach(p => m.appendChild(cardVariante(p)));
+  m.appendChild(sectionHeader("bebidas","🥤","Bebidas","Pra acompanhar."));
+  BEBIDAS.forEach(p => m.appendChild(cardSimples(p)));
+}
+
+function sectionHeader(id, emoji, titulo, desc){
+  return el(`<section id="${id}">
+    <div class="sec-titulo"><span class="emoji">${emoji}</span>${titulo}</div>
+    <div class="sec-desc">${desc}</div>
+  </section>`);
+}
+
+function cardSimples(p){
+  const c = el(`<div class="card">
+    ${thumb(p)}
+    <div class="info">
+      <h3>${p.nome}</h3>
+      <div class="desc">${p.desc}</div>
+      <div class="preco">${brl(p.preco)}</div>
+      <button class="btn-add">+ Adicionar</button>
+    </div>
+  </div>`);
+  c.querySelector(".btn-add").onclick = () => addSimples(p);
+  return c;
+}
+
+function cardVariante(p){
+  const c = el(`<div class="card">
+    ${thumb(p)}
+    <div class="info">
+      <h3>${p.nome}</h3>
+      <div class="desc">${p.desc}</div>
+      <div class="variantes"></div>
+    </div>
+  </div>`);
+  const box = c.querySelector(".variantes");
+  p.variantes.forEach(v => {
+    const b = el(`<div class="variante">
+      <span class="v-nome">${v.nome}</span>
+      <span class="v-preco">${brl(v.preco)}</span>
+      <button aria-label="adicionar ${p.nome} ${v.nome}">+</button>
+    </div>`);
+    b.querySelector("button").onclick = () => addItem(`${p.id}-${v.nome}`, `${p.nome} (${v.nome})`, [], v.preco);
+    box.appendChild(b);
+  });
+  return c;
+}
+
+function cardCombo(c){
+  const card = el(`<div class="card">
+    ${thumb(c)}
+    <div class="info">
+      <h3>${c.nome}</h3>
+      <div class="desc">${c.desc}</div>
+      <div class="preco"><small>a partir de</small> ${brl(c.base)}</div>
+      <button class="btn-add btn-montar">Montar combo →</button>
+    </div>
+  </div>`);
+  card.querySelector(".btn-add").onclick = () => abrirCombo(c);
+  return card;
+}
+
+/* ================= ADICIONAR ================= */
+function addSimples(p){ addItem(p.id, p.nome, [], p.preco); }
+function addItem(key, nome, det, preco){
+  const detKey = det.join("|");
+  const existing = cart.find(i => i.key===key && i.det.join("|")===detKey);
+  if(existing){ existing.qty++; } else { cart.push({key, nome, det, preco, qty:1}); }
+  atualizarBarra();
+  flashBar();
+}
+
+/* ================= MODAL COMBO ================= */
+let comboAtual = null, comboSel = {};
+function abrirCombo(c){
+  comboAtual = c;
+  comboSel = { lanches:[], acomp:null };
+  for(let i=0;i<c.lanches;i++) comboSel.lanches.push(null);
+
+  let html = `<button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
+    <h2>${c.nome}</h2><div class="m-sub">${c.desc}</div>`;
+  for(let i=0;i<c.lanches;i++){
+    html += `<div class="grupo">
+      <div class="grupo-tit">${c.lanches>1?`Lanche ${i+1}`:"Escolha seu lanche"}</div>
+      ${LANCHE_COMBO.map(l => `
+        <div class="opt" data-lanche="${i}" data-id="${l.id}">
+          <div class="radio"></div><div class="o-nome">${l.nome}</div>
+          <div class="o-preco">${l.extra>0?"+"+brl(l.extra):"incluso"}</div>
+        </div>`).join("")}
+    </div>`;
+  }
+  html += `<div class="grupo">
+      <div class="grupo-tit">Acompanhamento</div>
+      ${c.acomp.map(a => `
+        <div class="opt" data-acomp="${a.id}" data-nome="${a.nome}">
+          <div class="radio"></div><div class="o-nome">${a.nome}</div><div class="o-preco">incluso</div>
+        </div>`).join("")}
+    </div>
+    <div class="grupo">
+      <div class="grupo-tit">Bebida</div>
+      <div class="opt sel" style="cursor:default">
+        <div class="radio"></div><div class="o-nome">${c.bebida}</div><div class="o-preco">incluso</div>
+      </div>
+      <div class="sec-desc" style="margin:8px 2px 0">Sabor a combinar no WhatsApp 😉</div>
+    </div>
+    <div class="m-footer">
+      <button class="btn-full" id="addComboBtn" onclick="addCombo()">Adicionar — ${brl(c.base)}</button>
+    </div>`;
+  document.getElementById("modalBox").innerHTML = html;
+
+  document.querySelectorAll("[data-lanche]").forEach(o=>{
+    o.onclick = () => {
+      const idx = +o.dataset.lanche;
+      document.querySelectorAll(`[data-lanche="${idx}"]`).forEach(x=>x.classList.remove("sel"));
+      o.classList.add("sel"); comboSel.lanches[idx] = o.dataset.id; recalcCombo();
+    };
+  });
+  document.querySelectorAll("[data-acomp]").forEach(o=>{
+    o.onclick = () => {
+      document.querySelectorAll("[data-acomp]").forEach(x=>x.classList.remove("sel"));
+      o.classList.add("sel"); comboSel.acomp = {id:o.dataset.acomp, nome:o.dataset.nome};
+    };
+  });
+  abrirOverlay();
+}
+function precoCombo(){
+  let p = comboAtual.base;
+  comboSel.lanches.forEach(id=>{ if(id){ p += LANCHE_COMBO.find(x=>x.id===id).extra; } });
+  return p;
+}
+function recalcCombo(){ document.getElementById("addComboBtn").textContent = "Adicionar — " + brl(precoCombo()); }
+function addCombo(){
+  if(comboSel.lanches.some(x=>!x)){ alert("Escolha "+(comboAtual.lanches>1?"os lanches":"o lanche")+" do combo 🍔"); return; }
+  if(!comboSel.acomp){ alert("Escolha o acompanhamento 🍟"); return; }
+  const det = [];
+  comboSel.lanches.forEach((id,i)=>{
+    const l = LANCHE_COMBO.find(x=>x.id===id);
+    det.push(`Lanche${comboAtual.lanches>1?" "+(i+1):""}: ${l.nome}${l.extra>0?" (+"+brl(l.extra)+")":""}`);
+  });
+  det.push(`Acompanhamento: ${comboSel.acomp.nome}`);
+  det.push(`Bebida: ${comboAtual.bebida}`);
+  const key = comboAtual.id + "-" + comboSel.lanches.join(",") + "-" + comboSel.acomp.id;
+  addItem(key, comboAtual.nome, det, precoCombo());
+  fecharModal();
+}
+
+/* ================= CARRINHO / COMANDA ================= */
+function atualizarBarra(){
+  const count = cart.reduce((s,i)=>s+i.qty,0);
+  const total = cart.reduce((s,i)=>s+i.preco*i.qty,0);
+  document.getElementById("cartCount").textContent = count;
+  document.getElementById("cartTotal").textContent = brl(total);
+  document.getElementById("cartBar").classList.toggle("show", count>0);
+}
+let flashT;
+function flashBar(){
+  const btn = document.querySelector(".cart-btn");
+  btn.style.transform="scale(1.03)";
+  clearTimeout(flashT); flashT=setTimeout(()=>btn.style.transform="",150);
+}
+
+function abrirCarrinho(){ desenharCarrinho(); abrirOverlay(); }
+function desenharCarrinho(){
+  const box = document.getElementById("modalBox");
+  box.classList.add("comanda-wrap");
+  if(cart.length===0){
+    box.innerHTML = `<div class="comanda">
+      <button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
+      <h2>Comanda</h2>
+      <div class="cart-vazio">Sua comanda está vazia 🛒<br>Bora montar um combo!</div>
+    </div>`;
+    return;
+  }
+  const total = cart.reduce((s,i)=>s+i.preco*i.qty,0);
+  const itens = cart.reduce((s,i)=>s+i.qty,0);
+  let html = `<div class="comanda">
+    <button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
+    <div class="comanda-carimbo">Pedido</div>
+    <h2>Comanda KSB</h2>
+    <div class="m-sub">${itens} ${itens>1?"itens":"item"} · confira antes de enviar 👇</div>
+    <hr class="tracejado">`;
+  cart.forEach((i,idx)=>{
+    html += `<div class="ci">
+      <div class="ci-info">
+        <div class="ci-topo">
+          <span class="ci-nome">${i.qty}× ${i.nome}</span>
+          <span class="ci-preco">${brl(i.preco*i.qty)}</span>
+        </div>
+        ${i.det.length?`<div class="ci-det">${i.det.map(d=>"↳ "+d).join("<br>")}</div>`:""}
+        <div class="mini-step">
+          <button onclick="mudarQty(${idx},-1)" aria-label="diminuir">−</button>
+          <span>${i.qty}</span>
+          <button onclick="mudarQty(${idx},1)" aria-label="aumentar">+</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `<hr class="tracejado">
+    <div class="resumo-total"><span>Total</span><span class="rt-val">${brl(total)}</span></div>
+    <div class="campo">
+      <label>Seu nome</label>
+      <input id="inpNome" type="text" placeholder="Ex: João" value="${esc(nomeSalvo)}" autocomplete="name">
+    </div>
+    <div class="campo">
+      <label>Endereço de entrega</label>
+      <input id="inpEndereco" type="text" placeholder="Rua, nº, bairro e referência" value="${esc(enderecoSalvo)}" autocomplete="street-address">
+    </div>
+    <div class="campo">
+      <label>Forma de pagamento</label>
+      <div class="pag-opts">
+        <div class="pag-opt" data-pag="PIX" onclick="selPag(this)">💠 PIX</div>
+        <div class="pag-opt" data-pag="Dinheiro" onclick="selPag(this)">💵 Dinheiro</div>
+        <div class="pag-opt" data-pag="Cartão na entrega" onclick="selPag(this)">💳 Cartão</div>
+      </div>
+      <div id="trocoBox" style="display:none;margin-top:10px">
+        <input id="inpTroco" type="text" placeholder="Precisa de troco? Pra quanto? (ex: R$ 100)" value="${esc(trocoSalvo)}">
+      </div>
+      <div id="pixBox" style="display:none;margin-top:10px">
+        <div class="pix-card">
+          <div class="pix-label">Chave PIX (e-mail)</div>
+          <div class="pix-chave">
+            <span id="pixChave">${PIX_CHAVE}</span>
+            <button type="button" onclick="copiarPix()">Copiar</button>
+          </div>
+          <div class="pix-obs">Faça o PIX e mande o comprovante junto com o pedido 💚</div>
+        </div>
+      </div>
+    </div>
+    <div class="campo">
+      <label>Observações <span class="opc">(opcional)</span></label>
+      <textarea id="inpObs" rows="2" placeholder="Ex: sem cebola, ponto da carne...">${esc(obsSalvo)}</textarea>
+    </div>
+    <div class="obs-frete">Só falta o frete — a gente combina rapidinho no WhatsApp 🛵</div>
+    <div class="m-footer" style="background:none;padding:0;margin:0">
+      <button class="btn-full" onclick="enviarWhatsapp()">🟢 Enviar pedido no WhatsApp</button>
+    </div>
+  </div>`;
+  box.innerHTML = html;
+  document.getElementById("inpNome").oninput = e => nomeSalvo = e.target.value;
+  document.getElementById("inpEndereco").oninput = e => enderecoSalvo = e.target.value;
+  document.getElementById("inpObs").oninput = e => obsSalvo = e.target.value;
+  document.getElementById("inpTroco").oninput = e => trocoSalvo = e.target.value;
+  // restaura pagamento escolhido ao redesenhar
+  if(pagamentoSalvo){
+    const alvo = document.querySelector(`.pag-opt[data-pag="${pagamentoSalvo}"]`);
+    if(alvo){
+      alvo.classList.add("sel");
+      if(pagamentoSalvo==="Dinheiro") document.getElementById("trocoBox").style.display="block";
+      if(pagamentoSalvo==="PIX") document.getElementById("pixBox").style.display="block";
+    }
+  }
+}
+function selPag(elem){
+  document.querySelectorAll(".pag-opt").forEach(x=>x.classList.remove("sel"));
+  elem.classList.add("sel");
+  pagamentoSalvo = elem.dataset.pag;
+  document.getElementById("trocoBox").style.display = (pagamentoSalvo==="Dinheiro") ? "block" : "none";
+  document.getElementById("pixBox").style.display = (pagamentoSalvo==="PIX") ? "block" : "none";
+}
+function copiarPix(){
+  const btn = event.currentTarget;
+  const done = () => { const t=btn.textContent; btn.textContent="Copiado!"; setTimeout(()=>btn.textContent=t,1600); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(PIX_CHAVE).then(done).catch(fallbackCopy); }
+  else fallbackCopy();
+  function fallbackCopy(){
+    const tmp=document.createElement("input"); tmp.value=PIX_CHAVE; document.body.appendChild(tmp);
+    tmp.select(); try{document.execCommand("copy");}catch(e){} tmp.remove(); done();
+  }
+}
+function mudarQty(idx, d){
+  cart[idx].qty += d;
+  if(cart[idx].qty<=0) cart.splice(idx,1);
+  atualizarBarra();
+  if(cart.length===0){ fecharModal(); return; }
+  desenharCarrinho();
+}
+
+/* ================= WHATSAPP ================= */
+function enviarWhatsapp(){
+  const nome = (document.getElementById("inpNome").value || "").trim();
+  const endereco = (document.getElementById("inpEndereco").value || "").trim();
+  const obs = (document.getElementById("inpObs").value || "").trim();
+  const troco = (document.getElementById("inpTroco").value || "").trim();
+  if(!nome){ alert("Escreve teu nome pra gente saber quem pediu 😄"); document.getElementById("inpNome").focus(); return; }
+  if(!endereco){ alert("Coloca o endereço pra entrega chegar certinho 🛵"); document.getElementById("inpEndereco").focus(); return; }
+  if(!pagamentoSalvo){ alert("Escolhe a forma de pagamento 💳"); return; }
+
+  const total = cart.reduce((s,i)=>s+i.preco*i.qty,0);
+  let msg = `🍔 *NOVO PEDIDO — KSB Burger*\n\n`;
+  msg += `👤 *Cliente:* ${nome}\n`;
+  msg += `📍 *Entrega:* ${endereco}\n\n`;
+  msg += `*🧾 Itens do pedido:*\n`;
+  cart.forEach(i=>{
+    msg += `\n▪️ *${i.qty}x ${i.nome}* — ${brl(i.preco*i.qty)}\n`;
+    i.det.forEach(d => msg += `    ↳ ${d}\n`);
+  });
+  msg += `\n———————————\n*💰 TOTAL: ${brl(total)}*\n`;
+  msg += `💳 *Pagamento:* ${pagamentoSalvo}\n`;
+  if(pagamentoSalvo==="Dinheiro" && troco) msg += `    ↳ Troco pra ${troco}\n`;
+  if(pagamentoSalvo==="PIX") msg += `    ↳ Chave PIX: ${PIX_CHAVE}\n`;
+  if(obs) msg += `\n📝 *Observações:* ${obs}\n`;
+  msg += `\n_Frete a combinar._\n`;
+  msg += `\n📲 Pedido feito pelo cardápio digital KSB 🔥`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+/* ================= OVERLAY ================= */
+function abrirOverlay(){ document.getElementById("overlay").classList.add("open"); document.body.style.overflow="hidden"; }
+function fecharModal(){ document.getElementById("overlay").classList.remove("open"); document.body.style.overflow=""; }
+document.getElementById("overlay").addEventListener("click", e => { if(e.target.id==="overlay") fecharModal(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") fecharModal(); });
+
+render();
+atualizarBarra();
+</script>
+</body>
+</html>
