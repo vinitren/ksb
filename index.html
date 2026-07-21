@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>KSB — Salgados & Burger · Cardápio</title>
 <meta name="theme-color" content="#0D0D0D">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,7 +34,13 @@
     min-height:100vh;
     padding-bottom:120px;
     -webkit-font-smoothing:antialiased;
+    -webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none;
+    touch-action:manipulation;
   }
+  /* app-like: nada selecionável/arrastável, exceto campos de digitação */
+  img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+  input,textarea{-webkit-user-select:text;user-select:text}
   .anton{font-family:'Anton',sans-serif;font-weight:400}
   :focus-visible{outline:3px solid var(--brasa);outline-offset:2px;border-radius:6px}
 
@@ -95,7 +101,9 @@
   /* foto no topo — fundo branco, produto recortado com zoom, sem corte */
   .card .thumb{width:100%;height:clamp(210px,56vw,260px);background:#fff;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden;padding:8px 10px}
   .card .thumb .foto{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.16))}
-  .card .thumb.noimg{background:radial-gradient(circle at 50% 40%, rgba(245,179,1,.15), rgba(0,0,0,.4)), linear-gradient(158deg,#5C0E12,#46090c)}
+  .card .thumb.noimg{flex-direction:column;gap:10px;background:radial-gradient(circle at 50% 40%, rgba(245,179,1,.12), rgba(0,0,0,.4)), linear-gradient(158deg,#5C0E12,#46090c)}
+  .card .thumb .ph-emoji{font-size:58px;line-height:1;opacity:.9}
+  .card .thumb .ph-txt{font-family:'Poppins';font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--fumaca)}
   .card .info{padding:12px 16px 16px}
   .card h3{font-size:16.5px;font-weight:800;letter-spacing:.3px;line-height:1.15}
   .card .desc{color:var(--fumaca);font-size:12.5px;margin-top:4px;font-weight:500;line-height:1.35}
@@ -315,8 +323,9 @@ const el = (html) => { const t=document.createElement("template"); t.innerHTML=h
 const esc = s => (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
 // thumb com foto real + fallback (jpg → png → emoji)
+const placeholder = emoji => `<span class="ph-emoji">${emoji}</span><span class="ph-txt">Aguardando foto oficial</span>`;
 function thumb(p){
-  if(!p.img) return `<div class="thumb noimg">${p.emoji}</div>`;
+  if(!p.img) return `<div class="thumb noimg">${placeholder(p.emoji)}</div>`;
   return `<div class="thumb">
     <img class="foto" src="img/${p.img}.png" data-jpg="img/${p.img}.jpg" data-emoji="${p.emoji}"
          alt="${p.nome}" loading="lazy" onerror="fotoErro(this)">
@@ -324,7 +333,7 @@ function thumb(p){
 }
 function fotoErro(img){
   if(img.dataset.jpg){ const alt = img.dataset.jpg; img.removeAttribute("data-jpg"); img.src = alt; return; }
-  const box = img.parentElement; box.classList.add("noimg"); box.innerHTML = img.dataset.emoji; // sem foto → emoji no fundo escuro
+  const box = img.parentElement; box.classList.add("noimg"); box.innerHTML = placeholder(img.dataset.emoji); // sem foto → placeholder
 }
 
 /* ================= RENDER MENU ================= */
@@ -649,6 +658,13 @@ function abrirOverlay(){ document.getElementById("overlay").classList.add("open"
 function fecharModal(){ document.getElementById("overlay").classList.remove("open"); document.body.style.overflow=""; }
 document.getElementById("overlay").addEventListener("click", e => { if(e.target.id==="overlay") fecharModal(); });
 document.addEventListener("keydown", e => { if(e.key==="Escape") fecharModal(); });
+
+/* ===== App-like: sem menu de contexto, sem zoom por gesto ===== */
+document.addEventListener("contextmenu", e => e.preventDefault());
+["gesturestart","gesturechange","gestureend"].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault()));
+document.addEventListener("dragstart", e => e.preventDefault());
+// duplo-toque já é neutralizado por touch-action:manipulation (sem quebrar toques)
 
 render();
 atualizarBarra();
