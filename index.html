@@ -208,6 +208,28 @@
   .comanda .obs-frete{font-family:'Poppins';text-align:center;color:var(--fumaca);font-size:12px;margin:12px 0 4px}
   .comanda .btn-full{border-radius:14px;margin-top:6px}
   .cart-vazio{text-align:center;color:var(--fumaca);padding:34px 10px;font-weight:500;font-family:'Poppins'}
+  /* botão de geolocalização + status do frete */
+  .btn-loc{width:100%;margin-top:10px;background:rgba(245,179,1,.1);border:1.5px dashed var(--brasa);color:var(--brasa);font-family:'Poppins';font-weight:700;font-size:13.5px;padding:12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+  .btn-loc:active{transform:scale(.98)}
+  .btn-loc:disabled{opacity:.6;cursor:default}
+  .frete-status{font-family:'Poppins';font-size:12.5px;margin-top:9px;line-height:1.45;text-align:center;color:var(--fumaca)}
+  .frete-status:empty{display:none}
+  .frete-status.ok{color:#7ee081}
+  .frete-status.erro{color:#ff8a8a}
+  .frete-status.carregando{color:var(--brasa)}
+  .resumo-linha{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;font-family:var(--mono);font-size:13.5px;color:var(--fumaca)}
+  .resumo-linha span:last-child{color:#fff;font-weight:700}
+  .resumo-linha small{font-weight:400;opacity:.8}
+
+  /* ---------- Seção apps (iFood / 99Food) ---------- */
+  .apps-sec{max-width:640px;margin:8px auto 0;padding:26px 20px 6px;text-align:center}
+  .apps-titulo{font-family:'Anton';font-size:22px;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+  .apps-sub{font-family:'Poppins';color:var(--fumaca);font-size:13px;margin:6px 0 16px}
+  .apps-botoes{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .app-btn{flex:1;min-width:160px;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 16px;border-radius:14px;font-family:'Poppins';font-weight:800;font-size:14.5px;text-decoration:none;transition:transform .15s;pointer-events:auto}
+  .app-btn:active{transform:scale(.98)}
+  .app-btn.ifood{background:#ea1d2c;color:#fff}
+  .app-btn.nn{background:#ffe600;color:#111}
 
   footer{text-align:center;padding:38px 20px 10px;color:var(--fumaca);font-size:12px}
   footer .canais{font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:6px}
@@ -238,6 +260,15 @@
 </nav>
 
 <main id="menu"><!-- render via JS --></main>
+
+<section class="apps-sec" id="apps">
+  <div class="apps-titulo">Prefere pedir pelos apps? 📱</div>
+  <div class="apps-sub">A gente também tá no iFood e no 99Food 🔥</div>
+  <div class="apps-botoes">
+    <a class="app-btn ifood" href="https://www.ifood.com.br/delivery/curitiba-pr/ksb—krocs-salgados–burger-hauer/01c9840b-83a8-40da-93f0-7de70da0a3c8" target="_blank" rel="noopener">🍔 Pedir no iFood</a>
+    <a class="app-btn nn" href="https://oia.99app.com/dlp9/a9vPL0" target="_blank" rel="noopener">🛵 Pedir no 99Food</a>
+  </div>
+</section>
 
 <footer>
   <div class="canais">WHATSAPP · IFOOD · 99FOOD</div>
@@ -316,11 +347,73 @@ let enderecoSalvo = "";
 let obsSalvo = "";
 let pagamentoSalvo = "";
 let trocoSalvo = "";
+let freteInfo = null; // {distanciaKm, taxa, bloqueado} — null = não calculado (frete a combinar)
 
 /* ================= HELPERS ================= */
 const brl = n => "R$ " + n.toFixed(2).replace(".", ",");
 const el = (html) => { const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; };
 const esc = s => (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+/* ================= FRETE (cálculo interno) ================= */
+// Coordenada da loja — USO INTERNO só pro cálculo de distância. Nunca exibir na tela nem na mensagem.
+const LOJA = { lat: -25.479731165742784, lng: -49.25227477116659 };
+
+// distância em linha reta (haversine), em km
+function haversineKm(lat1, lng1, lat2, lng2){
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+// faixas: ≤4km grátis · 4–8km R$9,99 · 8–10km R$11,99 · >10km bloqueia
+function faixaFrete(km){
+  if(km <= 4)  return { distanciaKm: km, taxa: 0,     bloqueado: false };
+  if(km <= 8)  return { distanciaKm: km, taxa: 9.99,  bloqueado: false };
+  if(km <= 10) return { distanciaKm: km, taxa: 11.99, bloqueado: false };
+  return { distanciaKm: km, taxa: null, bloqueado: true };
+}
+const subtotalCart = () => cart.reduce((s,i)=>s+i.preco*i.qty,0);
+const taxaFrete    = () => (freteInfo && !freteInfo.bloqueado) ? freteInfo.taxa : 0;
+const totalPedido  = () => subtotalCart() + taxaFrete();
+const kmFmt        = () => freteInfo.distanciaKm.toFixed(1).replace(".", ",");
+
+function freteStatusClasse(){
+  if(!freteInfo) return "frete-status";
+  return "frete-status " + (freteInfo.bloqueado ? "erro" : "ok");
+}
+function freteStatusTexto(){
+  if(!freteInfo) return "";
+  if(freteInfo.bloqueado) return `❌ Você está a ${kmFmt()} km da loja — infelizmente ainda não entregamos nessa área 😔`;
+  if(freteInfo.taxa === 0) return `✅ ${kmFmt()} km — entrega grátis! 🎉`;
+  return `✅ ${kmFmt()} km — taxa de entrega ${brl(freteInfo.taxa)}`;
+}
+
+function usarLocalizacao(){
+  const status = document.getElementById("freteStatus");
+  const btn = document.getElementById("btnLoc");
+  if(!navigator.geolocation){
+    status.className = "frete-status erro";
+    status.textContent = "Seu navegador não suporta localização 😕 Informe o endereço que a gente combina o frete no WhatsApp.";
+    return;
+  }
+  status.className = "frete-status carregando";
+  status.textContent = "📍 Buscando sua localização...";
+  if(btn) btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const km = haversineKm(pos.coords.latitude, pos.coords.longitude, LOJA.lat, LOJA.lng);
+      freteInfo = faixaFrete(km);
+      desenharCarrinho(); // redesenha já com o frete aplicado no resumo
+    },
+    () => {
+      freteInfo = null;
+      if(btn) btn.disabled = false;
+      status.className = "frete-status erro";
+      status.textContent = "Não consegui pegar sua localização 😕 Tenta de novo ou informe o endereço que a gente combina o frete no WhatsApp.";
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
 
 // thumb com foto real + fallback (jpg → png → emoji)
 const placeholder = emoji => `<span class="ph-emoji">${emoji}</span><span class="ph-txt">Aguardando foto oficial</span>`;
@@ -520,8 +613,14 @@ function desenharCarrinho(){
     </div>`;
     return;
   }
-  const total = cart.reduce((s,i)=>s+i.preco*i.qty,0);
+  const subtotal = subtotalCart();
+  const total = totalPedido();
   const itens = cart.reduce((s,i)=>s+i.qty,0);
+  let freteLinha = "";
+  if(freteInfo && !freteInfo.bloqueado){
+    const valorTaxa = freteInfo.taxa === 0 ? "Grátis" : brl(freteInfo.taxa);
+    freteLinha = `<div class="resumo-linha"><span>Taxa de entrega <small>(${kmFmt()} km)</small></span><span>${valorTaxa}</span></div>`;
+  }
   let html = `<div class="comanda">
     <button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
     <div class="comanda-carimbo">Pedido</div>
@@ -545,6 +644,8 @@ function desenharCarrinho(){
     </div>`;
   });
   html += `<hr class="tracejado">
+    <div class="resumo-linha"><span>Subtotal</span><span>${brl(subtotal)}</span></div>
+    ${freteLinha}
     <div class="resumo-total"><span>Total</span><span class="rt-val">${brl(total)}</span></div>
     <div class="campo">
       <label>Seu nome</label>
@@ -553,6 +654,8 @@ function desenharCarrinho(){
     <div class="campo">
       <label>Endereço de entrega</label>
       <input id="inpEndereco" type="text" placeholder="Rua, nº, bairro e referência" value="${esc(enderecoSalvo)}" autocomplete="street-address">
+      <button type="button" class="btn-loc" id="btnLoc" onclick="usarLocalizacao()">📍 Usar minha localização (calcular frete)</button>
+      <div id="freteStatus" class="${freteStatusClasse()}">${freteStatusTexto()}</div>
     </div>
     <div class="campo">
       <label>Forma de pagamento</label>
@@ -579,7 +682,11 @@ function desenharCarrinho(){
       <label>Observações <span class="opc">(opcional)</span></label>
       <textarea id="inpObs" rows="2" placeholder="Ex: sem cebola, ponto da carne...">${esc(obsSalvo)}</textarea>
     </div>
-    <div class="obs-frete">Só falta o frete — a gente combina rapidinho no WhatsApp 🛵</div>
+    <div class="obs-frete">${
+      freteInfo
+        ? (freteInfo.bloqueado ? "Poxa, você está fora da nossa área de entrega 😔" : "Frete calculado pela sua localização ✅")
+        : "Toque em <b>Usar minha localização</b> pra calcular o frete — ou a gente combina rapidinho no WhatsApp 🛵"
+    }</div>
     <div class="m-footer" style="background:none;padding:0;margin:0">
       <button class="btn-full" onclick="enviarWhatsapp()">🟢 Enviar pedido no WhatsApp</button>
     </div>
@@ -633,8 +740,11 @@ function enviarWhatsapp(){
   if(!nome){ alert("Escreve teu nome pra gente saber quem pediu 😄"); document.getElementById("inpNome").focus(); return; }
   if(!endereco){ alert("Coloca o endereço pra entrega chegar certinho 🛵"); document.getElementById("inpEndereco").focus(); return; }
   if(!pagamentoSalvo){ alert("Escolhe a forma de pagamento 💳"); return; }
+  if(freteInfo && freteInfo.bloqueado){ alert("Infelizmente você está fora da nossa área de entrega 😔 (mais de 10 km da loja)"); return; }
 
-  const total = cart.reduce((s,i)=>s+i.preco*i.qty,0);
+  const subtotal = subtotalCart();
+  const taxa = taxaFrete();
+  const total = totalPedido();
   let msg = `🍔 *NOVO PEDIDO — KSB Burger*\n\n`;
   msg += `👤 *Cliente:* ${nome}\n`;
   msg += `📍 *Entrega:* ${endereco}\n\n`;
@@ -643,12 +753,18 @@ function enviarWhatsapp(){
     msg += `\n▪️ *${i.qty}x ${i.nome}* — ${brl(i.preco*i.qty)}\n`;
     i.det.forEach(d => msg += `    ↳ ${d}\n`);
   });
-  msg += `\n———————————\n*💰 TOTAL: ${brl(total)}*\n`;
+  msg += `\n———————————\n`;
+  msg += `*Subtotal:* ${brl(subtotal)}\n`;
+  if(freteInfo && !freteInfo.bloqueado){
+    msg += `*Taxa de entrega* (${kmFmt()} km): ${freteInfo.taxa === 0 ? "Grátis" : brl(freteInfo.taxa)}\n`;
+  } else {
+    msg += `*Taxa de entrega:* a combinar\n`;
+  }
+  msg += `*💰 TOTAL: ${brl(total)}*\n`;
   msg += `💳 *Pagamento:* ${pagamentoSalvo}\n`;
   if(pagamentoSalvo==="Dinheiro" && troco) msg += `    ↳ Troco pra ${troco}\n`;
   if(pagamentoSalvo==="PIX") msg += `    ↳ Chave PIX: ${PIX_CHAVE}\n`;
   if(obs) msg += `\n📝 *Observações:* ${obs}\n`;
-  msg += `\n_Frete a combinar._\n`;
   msg += `\n📲 Pedido feito pelo cardápio digital KSB 🔥`;
   window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, "_blank");
 }
