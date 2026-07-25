@@ -64,7 +64,7 @@
     animation:pulso 4s ease-in-out infinite;
   }
   @keyframes pulso{0%,100%{opacity:.7;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.08)}}
-  .logo-img{position:relative;z-index:1;display:block;margin:0 auto;width:min(240px,64vw);height:auto;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55))}
+  .logo-img{position:relative;z-index:1;display:block;margin:0 auto;width:min(340px,82vw);height:auto;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55))}
   .tagline{
     position:relative;z-index:1;margin:18px auto 0;display:block;width:max-content;max-width:90%;
     background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;
@@ -99,7 +99,7 @@
   }
   .card::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,var(--brasa),transparent);opacity:.4;z-index:2}
   /* foto no topo — fundo branco, produto recortado com zoom, sem corte */
-  .card .thumb{width:100%;height:clamp(210px,56vw,260px);background:#fff;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden;padding:8px 10px}
+  .card .thumb{width:100%;height:clamp(250px,66vw,330px);background:#fff;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden;padding:6px 8px}
   .card .thumb .foto{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.16))}
   .card .thumb.noimg{flex-direction:column;gap:10px;background:radial-gradient(circle at 50% 40%, rgba(245,179,1,.12), rgba(0,0,0,.4)), linear-gradient(158deg,#5C0E12,#46090c)}
   .card .thumb .ph-emoji{font-size:58px;line-height:1;opacity:.9}
@@ -249,7 +249,7 @@
 
 <header>
   <div class="brasa-glow" aria-hidden="true"></div>
-  <img class="logo-img" src="img/logo.png" alt="KSB — Krocs Salgados & Burger">
+  <img class="logo-img" src="img/logo.webp" alt="KSB — Krocs Salgados & Burger">
   <div class="tagline">🔥 Peça sem sair de casa!</div>
   <div class="hero-linha">Monte seu pedido aqui e mande direto no nosso WhatsApp 🍔</div>
 </header>
@@ -432,12 +432,11 @@ const placeholder = emoji => `<span class="ph-emoji">${emoji}</span><span class=
 function thumb(p){
   if(!p.img) return `<div class="thumb noimg">${placeholder(p.emoji)}</div>`;
   return `<div class="thumb">
-    <img class="foto" src="img/${p.img}.png" data-jpg="img/${p.img}.jpg" data-emoji="${p.emoji}"
+    <img class="foto" src="img/${p.img}.webp" data-emoji="${p.emoji}"
          alt="${p.nome}" loading="lazy" onerror="fotoErro(this)">
   </div>`;
 }
 function fotoErro(img){
-  if(img.dataset.jpg){ const alt = img.dataset.jpg; img.removeAttribute("data-jpg"); img.src = alt; return; }
   const box = img.parentElement; box.classList.add("noimg"); box.innerHTML = placeholder(img.dataset.emoji); // sem foto → placeholder
 }
 
