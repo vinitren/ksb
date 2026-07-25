@@ -357,6 +357,9 @@ const esc = s => (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/<
 /* ================= FRETE (cálculo interno) ================= */
 // Coordenada da loja — USO INTERNO só pro cálculo de distância. Nunca exibir na tela nem na mensagem.
 const LOJA = { lat: -25.479731165742784, lng: -49.25227477116659 };
+// Haversine dá a distância em linha reta; o trajeto real de rua costuma ser ~1,3x maior.
+// Aplicamos esse fator pra aproximar a distância de moto e deixar as faixas de frete mais justas.
+const FATOR_RUA = 1.3;
 
 // distância em linha reta (haversine), em km
 function haversineKm(lat1, lng1, lat2, lng2){
@@ -401,8 +404,9 @@ function usarLocalizacao(){
   if(btn) btn.disabled = true;
   navigator.geolocation.getCurrentPosition(
     pos => {
-      const km = haversineKm(pos.coords.latitude, pos.coords.longitude, LOJA.lat, LOJA.lng);
-      freteInfo = faixaFrete(km);
+      const kmReta = haversineKm(pos.coords.latitude, pos.coords.longitude, LOJA.lat, LOJA.lng);
+      const kmRua = kmReta * FATOR_RUA; // estimativa do trajeto real
+      freteInfo = faixaFrete(kmRua);
       desenharCarrinho(); // redesenha já com o frete aplicado no resumo
     },
     () => {
