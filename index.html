@@ -221,6 +221,11 @@
   .resumo-linha span:last-child{color:#fff;font-weight:700}
   .resumo-linha small{font-weight:400;opacity:.8}
 
+  /* ---------- Banner de promoção ---------- */
+  .promo-bar{max-width:640px;margin:0 auto 16px;background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;font-family:'Poppins';font-weight:800;font-size:13.5px;text-align:center;padding:11px 16px;border-radius:14px;letter-spacing:.3px;box-shadow:0 6px 18px rgba(245,179,1,.28)}
+  /* selo/hint de frete grátis no checkout */
+  .frete-gratis-hint{font-family:'Poppins';font-size:12px;font-weight:700;color:#7ee081;text-align:center;margin-top:8px}
+
   /* ---------- Seção apps (iFood / 99Food) ---------- */
   .apps-sec{max-width:640px;margin:8px auto 0;padding:26px 20px 6px;text-align:center}
   .apps-titulo{font-family:'Anton';font-size:22px;color:#fff;text-transform:uppercase;letter-spacing:.5px}
@@ -293,6 +298,9 @@
 /* ================= DADOS ================= */
 const WHATSAPP = "5541995341284";
 const PIX_CHAVE = "Krocsalimentos@gmail.com"; // chave PIX (e-mail)
+const PONTOS = ["Ao ponto", "Bem passado", "Mal passado"]; // ponto da carne
+// Banner de promoção no topo — troque o texto ou ponha ativo:false pra esconder
+const PROMO = { ativo: true, texto: "🔥 FRETE GRÁTIS até 4 km — peça e receba quentinho!" };
 
 const LANCHES = [
   {id:"classic", nome:"KROC CLASSIC", desc:"Pão brioche, molho da casa, hambúrguer 100g e cheddar fatiado.", preco:18.90, emoji:"🍔", img:"kroc-classic"},
@@ -437,8 +445,9 @@ function fotoErro(img){
 function render(){
   const m = document.getElementById("menu");
   m.innerHTML = "";
+  if(PROMO.ativo) m.appendChild(el(`<div class="promo-bar">${PROMO.texto}</div>`));
   m.appendChild(sectionHeader("lanches","🍔","Lanches Kroc","Artesanais, feitos na hora 🔥"));
-  LANCHES.forEach(p => m.appendChild(cardSimples(p)));
+  LANCHES.forEach(p => m.appendChild(cardSimples(p, true))); // true = escolher ponto da carne
   m.appendChild(sectionHeader("combos","🎯","Combos","Mais barato junto — e dá pra dividir."));
   COMBOS.forEach(c => m.appendChild(cardCombo(c)));
   m.appendChild(sectionHeader("petiscos","🍟","Petiscos","Escolha o tamanho."));
@@ -456,7 +465,7 @@ function sectionHeader(id, emoji, titulo, desc){
   </section>`);
 }
 
-function cardSimples(p){
+function cardSimples(p, comPonto=false){
   const c = el(`<div class="card">
     ${thumb(p)}
     <div class="info">
@@ -466,7 +475,7 @@ function cardSimples(p){
       <button class="btn-add">+ Adicionar</button>
     </div>
   </div>`);
-  c.querySelector(".btn-add").onclick = () => addSimples(p);
+  c.querySelector(".btn-add").onclick = () => comPonto ? abrirPonto(p) : addSimples(p);
   return c;
 }
 
@@ -516,12 +525,41 @@ function addItem(key, nome, det, preco){
   flashBar();
 }
 
+/* ================= MODAL PONTO (Kroc avulso) ================= */
+let pontoAtual = null, pontoSel = null;
+function abrirPonto(p){
+  pontoAtual = p; pontoSel = null;
+  const box = document.getElementById("modalBox");
+  box.classList.remove("comanda-wrap");
+  box.innerHTML = `<button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
+    <h2>${p.nome}</h2><div class="m-sub">${p.desc}</div>
+    <div class="grupo">
+      <div class="grupo-tit">Ponto da carne 🔥</div>
+      ${PONTOS.map(pt => `<div class="opt" data-ponto="${pt}"><div class="radio"></div><div class="o-nome">${pt}</div></div>`).join("")}
+    </div>
+    <div class="m-footer">
+      <button class="btn-full" onclick="addComPonto()">Adicionar — ${brl(p.preco)}</button>
+    </div>`;
+  document.querySelectorAll("[data-ponto]").forEach(o=>{
+    o.onclick = () => {
+      document.querySelectorAll("[data-ponto]").forEach(x=>x.classList.remove("sel"));
+      o.classList.add("sel"); pontoSel = o.dataset.ponto;
+    };
+  });
+  abrirOverlay();
+}
+function addComPonto(){
+  if(!pontoSel){ alert("Escolhe o ponto da carne 🔥"); return; }
+  addItem(pontoAtual.id + "-" + pontoSel, pontoAtual.nome, ["Ponto: " + pontoSel], pontoAtual.preco);
+  fecharModal();
+}
+
 /* ================= MODAL COMBO ================= */
 let comboAtual = null, comboSel = {};
 function abrirCombo(c){
   comboAtual = c;
-  comboSel = { lanches:[], acomp:null };
-  for(let i=0;i<c.lanches;i++) comboSel.lanches.push(null);
+  comboSel = { lanches:[], pontos:[], acomp:null };
+  for(let i=0;i<c.lanches;i++){ comboSel.lanches.push(null); comboSel.pontos.push(null); }
 
   let html = `<button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
     <h2>${c.nome}</h2><div class="m-sub">${c.desc}</div>`;
@@ -532,6 +570,13 @@ function abrirCombo(c){
         <div class="opt" data-lanche="${i}" data-id="${l.id}">
           <div class="radio"></div><div class="o-nome">${l.nome}</div>
           <div class="o-preco">${l.extra>0?"+"+brl(l.extra):"incluso"}</div>
+        </div>`).join("")}
+    </div>
+    <div class="grupo">
+      <div class="grupo-tit">${c.lanches>1?`Ponto do lanche ${i+1}`:"Ponto da carne"} 🔥</div>
+      ${PONTOS.map(pt => `
+        <div class="opt" data-ponto-idx="${i}" data-ponto="${pt}">
+          <div class="radio"></div><div class="o-nome">${pt}</div>
         </div>`).join("")}
     </div>`;
   }
@@ -561,6 +606,13 @@ function abrirCombo(c){
       o.classList.add("sel"); comboSel.lanches[idx] = o.dataset.id; recalcCombo();
     };
   });
+  document.querySelectorAll("[data-ponto-idx]").forEach(o=>{
+    o.onclick = () => {
+      const idx = +o.dataset.pontoIdx;
+      document.querySelectorAll(`[data-ponto-idx="${idx}"]`).forEach(x=>x.classList.remove("sel"));
+      o.classList.add("sel"); comboSel.pontos[idx] = o.dataset.ponto;
+    };
+  });
   document.querySelectorAll("[data-acomp]").forEach(o=>{
     o.onclick = () => {
       document.querySelectorAll("[data-acomp]").forEach(x=>x.classList.remove("sel"));
@@ -577,15 +629,16 @@ function precoCombo(){
 function recalcCombo(){ document.getElementById("addComboBtn").textContent = "Adicionar — " + brl(precoCombo()); }
 function addCombo(){
   if(comboSel.lanches.some(x=>!x)){ alert("Escolha "+(comboAtual.lanches>1?"os lanches":"o lanche")+" do combo 🍔"); return; }
+  if(comboSel.pontos.some(x=>!x)){ alert("Escolha o ponto da carne 🔥"); return; }
   if(!comboSel.acomp){ alert("Escolha o acompanhamento 🍟"); return; }
   const det = [];
   comboSel.lanches.forEach((id,i)=>{
     const l = LANCHE_COMBO.find(x=>x.id===id);
-    det.push(`Lanche${comboAtual.lanches>1?" "+(i+1):""}: ${l.nome}${l.extra>0?" (+"+brl(l.extra)+")":""}`);
+    det.push(`Lanche${comboAtual.lanches>1?" "+(i+1):""}: ${l.nome}${l.extra>0?" (+"+brl(l.extra)+")":""} · ${comboSel.pontos[i]}`);
   });
   det.push(`Acompanhamento: ${comboSel.acomp.nome}`);
   det.push(`Bebida: ${comboAtual.bebida}`);
-  const key = comboAtual.id + "-" + comboSel.lanches.join(",") + "-" + comboSel.acomp.id;
+  const key = comboAtual.id + "-" + comboSel.lanches.join(",") + "-" + comboSel.pontos.join(",") + "-" + comboSel.acomp.id;
   addItem(key, comboAtual.nome, det, precoCombo());
   fecharModal();
 }
@@ -659,6 +712,7 @@ function desenharCarrinho(){
       <label>Endereço de entrega</label>
       <input id="inpEndereco" type="text" placeholder="Rua, nº, bairro e referência" value="${esc(enderecoSalvo)}" autocomplete="street-address">
       <button type="button" class="btn-loc" id="btnLoc" onclick="usarLocalizacao()">📍 Usar minha localização (calcular frete)</button>
+      <div class="frete-gratis-hint">🎉 Frete grátis até 4 km da loja!</div>
       <div id="freteStatus" class="${freteStatusClasse()}">${freteStatusTexto()}</div>
     </div>
     <div class="campo">
