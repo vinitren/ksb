@@ -108,6 +108,12 @@
   .card h3{font-size:16.5px;font-weight:800;letter-spacing:.3px;line-height:1.15}
   .card .desc{color:var(--fumaca);font-size:12.5px;margin-top:4px;font-weight:500;line-height:1.35}
   .card .preco{font-family:var(--mono);font-weight:700;color:var(--brasa);font-size:20px;margin-top:9px;letter-spacing:-.5px}
+  .card .preco .preco-de{color:var(--fumaca);text-decoration:line-through;text-decoration-color:rgba(255,120,120,.85);font-weight:400;font-size:15px;margin-right:7px}
+  /* selos de destaque */
+  .badge{position:absolute;top:12px;left:12px;z-index:3;font-family:'Poppins';font-weight:800;font-size:11px;letter-spacing:.4px;text-transform:uppercase;padding:6px 11px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+  .badge.b-gold{background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200}
+  .badge.b-new{background:#1fa84f;color:#fff}
+  .badge.b-promo{background:#e01e2b;color:#fff}
   .card .preco small{font-family:'Poppins';font-size:11px;opacity:.75;font-weight:600;letter-spacing:0}
 
   .btn-add{margin-top:11px;background:linear-gradient(180deg,var(--brasa),#e0a000);color:#1a1200;border:none;font-family:'Poppins';font-weight:800;font-size:13.5px;padding:9px 18px;border-radius:999px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;box-shadow:0 4px 12px rgba(245,179,1,.25)}
@@ -440,21 +446,40 @@ function fotoErro(img){
   const box = img.parentElement; box.classList.add("noimg"); box.innerHTML = placeholder(img.dataset.emoji); // sem foto → placeholder
 }
 
+/* ================= ETIQUETAS / PREÇO ================= */
+// tag: "mais-pedido" | "novo" | "promo".  precoDe: preço antigo (mostra riscado + selo promo)
+const TAG_INFO = {
+  "mais-pedido": ["🔥 Mais pedido", "b-gold"],
+  "novo":        ["✨ Novo",        "b-new"],
+  "promo":       ["💥 Promoção",    "b-promo"],
+};
+function badgeHTML(p){
+  let tag = p.tag || (p.precoDe ? "promo" : null);
+  if(!tag || !TAG_INFO[tag]) return "";
+  const [txt, cls] = TAG_INFO[tag];
+  return `<span class="badge ${cls}">${txt}</span>`;
+}
+function precoHTML(preco, precoDe){
+  if(precoDe && precoDe > preco) return `<span class="preco-de">${brl(precoDe)}</span>${brl(preco)}`;
+  return brl(preco);
+}
+
 /* ================= RENDER MENU ================= */
 function render(){
   const m = document.getElementById("menu");
   m.innerHTML = "";
   if(PROMO.ativo) m.appendChild(el(`<div class="promo-bar">${PROMO.texto}</div>`));
+  const on = arr => arr.filter(x => x.disp !== false); // esconde itens marcados como esgotados
   m.appendChild(sectionHeader("lanches","🍔","Lanches Kroc","Artesanais, feitos na hora 🔥"));
-  LANCHES.forEach(p => m.appendChild(cardSimples(p, true))); // true = escolher ponto da carne
+  on(LANCHES).forEach(p => m.appendChild(cardSimples(p, true))); // true = escolher ponto da carne
   m.appendChild(sectionHeader("combos","🎯","Combos","Mais barato junto — e dá pra dividir."));
-  COMBOS.forEach(c => m.appendChild(cardCombo(c)));
+  on(COMBOS).forEach(c => m.appendChild(cardCombo(c)));
   m.appendChild(sectionHeader("petiscos","🍟","Petiscos","Escolha o tamanho."));
-  PETISCOS.forEach(p => m.appendChild(cardVariante(p)));
+  on(PETISCOS).forEach(p => m.appendChild(cardVariante(p)));
   m.appendChild(sectionHeader("sobremesas","🍩","Sobremesas","Pra fechar com chave de ouro."));
-  SOBREMESAS.forEach(p => m.appendChild(cardVariante(p)));
+  on(SOBREMESAS).forEach(p => m.appendChild(cardVariante(p)));
   m.appendChild(sectionHeader("bebidas","🥤","Bebidas","Pra acompanhar."));
-  BEBIDAS.forEach(p => m.appendChild(cardSimples(p)));
+  on(BEBIDAS).forEach(p => m.appendChild(cardSimples(p)));
 }
 
 function sectionHeader(id, emoji, titulo, desc){
@@ -466,11 +491,12 @@ function sectionHeader(id, emoji, titulo, desc){
 
 function cardSimples(p, comPonto=false){
   const c = el(`<div class="card">
+    ${badgeHTML(p)}
     ${thumb(p)}
     <div class="info">
       <h3>${p.nome}</h3>
       <div class="desc">${p.desc}</div>
-      <div class="preco">${brl(p.preco)}</div>
+      <div class="preco">${precoHTML(p.preco, p.precoDe)}</div>
       <button class="btn-add">+ Adicionar</button>
     </div>
   </div>`);
@@ -480,6 +506,7 @@ function cardSimples(p, comPonto=false){
 
 function cardVariante(p){
   const c = el(`<div class="card">
+    ${badgeHTML(p)}
     ${thumb(p)}
     <div class="info">
       <h3>${p.nome}</h3>
@@ -502,11 +529,12 @@ function cardVariante(p){
 
 function cardCombo(c){
   const card = el(`<div class="card">
+    ${badgeHTML(c)}
     ${thumb(c)}
     <div class="info">
       <h3>${c.nome}</h3>
       <div class="desc">${c.desc}</div>
-      <div class="preco"><small>a partir de</small> ${brl(c.base)}</div>
+      <div class="preco"><small>a partir de</small> ${precoHTML(c.base, c.precoDe)}</div>
       <button class="btn-add btn-montar">Montar combo →</button>
     </div>
   </div>`);
