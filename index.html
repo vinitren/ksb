@@ -194,9 +194,11 @@
   .ci .mini-step span{min-width:20px;text-align:center;font-weight:700;font-size:13px}
   .campo{margin:16px 0 6px;font-family:'Poppins'}
   .campo label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}
-  .campo input,.campo textarea{width:100%;padding:14px;border-radius:12px;font-size:15px;font-family:var(--mono);background:rgba(0,0,0,.4);border:1.5px dashed var(--borda-card);color:#fff}
+  .campo input,.campo textarea,.campo select{width:100%;padding:14px;border-radius:12px;font-size:15px;font-family:var(--mono);background:rgba(0,0,0,.4);border:1.5px dashed var(--borda-card);color:#fff}
   .campo textarea{resize:vertical;min-height:54px;line-height:1.4}
-  .campo input:focus,.campo textarea:focus{outline:none;border-color:var(--brasa);border-style:solid}
+  .campo select{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--brasa) 50%),linear-gradient(135deg,var(--brasa) 50%,transparent 50%);background-position:calc(100% - 20px) 22px,calc(100% - 14px) 22px;background-size:6px 6px;background-repeat:no-repeat}
+  .campo select option,.campo select optgroup{color:#111;background:#fff}
+  .campo input:focus,.campo textarea:focus,.campo select:focus{outline:none;border-color:var(--brasa);border-style:solid}
   .campo .opc{font-weight:500;color:var(--fumaca)}
   .pag-opts{display:flex;gap:8px;flex-wrap:wrap}
   .pag-opt{flex:1;min-width:92px;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;border-radius:12px;cursor:pointer;border:1.5px solid var(--borda-card);background:rgba(0,0,0,.35);font-family:'Poppins';font-weight:700;font-size:13px;text-align:center;transition:.15s}
@@ -306,14 +308,14 @@ const WHATSAPP = "5541995341284";
 const PIX_CHAVE = "Krocsalimentos@gmail.com"; // chave PIX (e-mail)
 const PONTOS = ["Ao ponto", "Bem passado", "Mal passado"]; // ponto da carne
 // Banner de promoção no topo — troque o texto ou ponha ativo:false pra esconder
-const PROMO = { ativo: true, texto: "🔥 FRETE GRÁTIS até 4 km — peça e receba quentinho!" };
+const PROMO = { ativo: true, texto: "🔥 FRETE GRÁTIS para Hauer, Boqueirão e Fanny!" };
 
 const LANCHES = [
   {id:"classic", nome:"KROC CLASSIC", desc:"Pão brioche, molho da casa, hambúrguer 100g e cheddar fatiado.", preco:18.90, emoji:"🍔", img:"kroc-classic"},
   {id:"salad",   nome:"KROC SALAD",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, alface e tomate.", preco:20.90, emoji:"🥗", img:"kroc-salad"},
   {id:"bacon",   nome:"KROC BACON",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado e bacon.", preco:21.90, emoji:"🥓", img:"kroc-bacon"},
   {id:"texas",   nome:"KROC TEXAS",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, bacon, Doritos e molho barbecue.", preco:23.90, emoji:"🌶️", img:"kroc-texas"},
-  {id:"turbo",   nome:"KROC TURBO",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, alface, tomate e bacon.", preco:23.90, emoji:"⚡", img:"kroc-turbo"},
+  {id:"turbo",   nome:"KROC TURBO",   desc:"Pão brioche, molho da casa, hambúrguer 100g, cheddar fatiado, alface, tomate e bacon.", preco:23.90, emoji:"⚡", img:"kroc-turbo", tag:"mais-pedido"},
   {id:"duplo",   nome:"KROC DUPLO",   desc:"Pão brioche, molho da casa, 2 hambúrgueres 100g e cheddar fatiado.", preco:25.00, emoji:"🍔", img:"kroc-duplo"},
 ];
 
@@ -331,7 +333,7 @@ const COMBOS = [
    desc:"1 lanche + 30 mini salgadinhos ou batata + 1 refri lata", lanches:1,
    acomp:[{id:"coxinha", nome:"30 mini salgadinhos variados"},{id:"batata", nome:"Batata frita individual"}],
    bebida:"1 refri lata 350ml"},
-  {id:"casal", nome:"COMBO CASAL", base:59.90, emoji:"❤️", img:"combo-casal",
+  {id:"casal", nome:"COMBO CASAL", base:59.90, emoji:"❤️", img:"combo-casal", tag:"mais-pedido",
    desc:"2 lanches + 50 mini salgadinhos ou batata + 2 refri lata", lanches:2,
    acomp:[{id:"coxinha", nome:"50 mini salgadinhos variados"},{id:"batata", nome:"Batata frita média"}],
    bebida:"2 refri lata 350ml"},
@@ -341,7 +343,7 @@ const PETISCOS = [
   {id:"salgadinhos", nome:"Mini salgadinhos variados", desc:"São mini mesmo! Variados.", emoji:"🥟", img:"mini-salgadinhos",
    variantes:[{nome:"15 un", preco:12.00},{nome:"30 un", preco:20.00},{nome:"50 un", preco:24.00},{nome:"100 un", preco:39.90}]},
   {id:"batata", nome:"Batata frita", desc:"Porção crocante de 300g.", emoji:"🍟", img:"batata-frita",
-   variantes:[{nome:"Tradicional", preco:15.00},{nome:"Bacon ou cheddar", preco:17.90},{nome:"Bacon e cheddar", preco:20.00}]},
+   variantes:[{nome:"Normal", preco:15.00},{nome:"Só bacon", preco:17.90},{nome:"Só cheddar", preco:17.90},{nome:"Bacon e cheddar", preco:20.00}]},
 ];
 
 const SOBREMESAS = [
@@ -361,76 +363,43 @@ let enderecoSalvo = "";
 let obsSalvo = "";
 let pagamentoSalvo = "";
 let trocoSalvo = "";
-let freteInfo = null; // {distanciaKm, taxa, bloqueado} — null = não calculado (frete a combinar)
+let bairroSalvo = "";
+let freteInfo = null; // {bairro, taxa} — taxa: número (0=grátis) ou null (a combinar). null geral = bairro não escolhido
 
 /* ================= HELPERS ================= */
 const brl = n => "R$ " + n.toFixed(2).replace(".", ",");
 const el = (html) => { const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; };
 const esc = s => (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
-/* ================= FRETE (cálculo interno) ================= */
-// Coordenada da loja — USO INTERNO só pro cálculo de distância. Nunca exibir na tela nem na mensagem.
-const LOJA = { lat: -25.479731165742784, lng: -49.25227477116659 };
-// Haversine dá a distância em linha reta; o trajeto real de rua costuma ser ~1,3x maior.
-// Aplicamos esse fator pra aproximar a distância de moto e deixar as faixas de frete mais justas.
-const FATOR_RUA = 1.3;
+/* ================= FRETE POR BAIRRO ================= */
+// Tabela de bairros e taxas. taxa: número (0 = grátis) ou null (a combinar, R$ 10 a R$ 15).
+const BAIRROS = [
+  { grupo:"🎉 Entrega grátis", taxa:0,    itens:["Hauer","Boqueirão","Fanny"] },
+  { grupo:"Taxa R$ 4,99",      taxa:4.99, itens:["Jardim das Américas","Guabirotuba","Lindóia","Guaíra","Parolin","Xaxim"] },
+  { grupo:"Taxa R$ 7,99",      taxa:7.99, itens:["Pinheirinho","Alto Boqueirão","Uberaba","Rebouças","Água Verde","Centro"] },
+  { grupo:"Outros bairros",    taxa:null, itens:["Outro bairro (taxa a combinar)"] },
+];
+const BAIRRO_TAXA = {};
+BAIRROS.forEach(g => g.itens.forEach(nome => { BAIRRO_TAXA[nome] = g.taxa; }));
 
-// distância em linha reta (haversine), em km
-function haversineKm(lat1, lng1, lat2, lng2){
-  const R = 6371, toRad = d => d * Math.PI / 180;
-  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-// faixas: ≤4km grátis · 4–8km R$9,99 · 8–10km R$11,99 · >10km bloqueia
-function faixaFrete(km){
-  if(km <= 4)  return { distanciaKm: km, taxa: 0,     bloqueado: false };
-  if(km <= 8)  return { distanciaKm: km, taxa: 9.99,  bloqueado: false };
-  if(km <= 10) return { distanciaKm: km, taxa: 11.99, bloqueado: false };
-  return { distanciaKm: km, taxa: null, bloqueado: true };
-}
 const subtotalCart = () => cart.reduce((s,i)=>s+i.preco*i.qty,0);
-const taxaFrete    = () => (freteInfo && !freteInfo.bloqueado) ? freteInfo.taxa : 0;
+const taxaFrete    = () => (freteInfo && typeof freteInfo.taxa === "number") ? freteInfo.taxa : 0;
 const totalPedido  = () => subtotalCart() + taxaFrete();
-const kmFmt        = () => freteInfo.distanciaKm.toFixed(1).replace(".", ",");
 
+function selBairro(nome){
+  freteInfo = nome ? { bairro: nome, taxa: BAIRRO_TAXA[nome] } : null;
+  bairroSalvo = nome;
+  desenharCarrinho(); // redesenha com a taxa aplicada no resumo
+}
 function freteStatusClasse(){
   if(!freteInfo) return "frete-status";
-  return "frete-status " + (freteInfo.bloqueado ? "erro" : "ok");
+  return "frete-status " + (freteInfo.taxa === null ? "carregando" : "ok");
 }
 function freteStatusTexto(){
   if(!freteInfo) return "";
-  if(freteInfo.bloqueado) return `❌ Você está a ${kmFmt()} km da loja — infelizmente ainda não entregamos nessa área 😔`;
-  if(freteInfo.taxa === 0) return `✅ ${kmFmt()} km — entrega grátis! 🎉`;
-  return `✅ ${kmFmt()} km — taxa de entrega ${brl(freteInfo.taxa)}`;
-}
-
-function usarLocalizacao(){
-  const status = document.getElementById("freteStatus");
-  const btn = document.getElementById("btnLoc");
-  if(!navigator.geolocation){
-    status.className = "frete-status erro";
-    status.textContent = "Seu navegador não suporta localização 😕 Informe o endereço que a gente combina o frete no WhatsApp.";
-    return;
-  }
-  status.className = "frete-status carregando";
-  status.textContent = "📍 Buscando sua localização...";
-  if(btn) btn.disabled = true;
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const kmReta = haversineKm(pos.coords.latitude, pos.coords.longitude, LOJA.lat, LOJA.lng);
-      const kmRua = kmReta * FATOR_RUA; // estimativa do trajeto real
-      freteInfo = faixaFrete(kmRua);
-      desenharCarrinho(); // redesenha já com o frete aplicado no resumo
-    },
-    () => {
-      freteInfo = null;
-      if(btn) btn.disabled = false;
-      status.className = "frete-status erro";
-      status.textContent = "Não consegui pegar sua localização 😕 Tenta de novo ou informe o endereço que a gente combina o frete no WhatsApp.";
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
+  if(freteInfo.taxa === null) return `🛵 ${freteInfo.bairro}: taxa a combinar (entre R$ 10 e R$ 15) — confirmamos no WhatsApp.`;
+  if(freteInfo.taxa === 0)    return `🎉 ${freteInfo.bairro}: entrega grátis!`;
+  return `✅ ${freteInfo.bairro}: taxa de entrega ${brl(freteInfo.taxa)}`;
 }
 
 // thumb com foto real + fallback (jpg → png → emoji)
@@ -701,9 +670,9 @@ function desenharCarrinho(){
   const total = totalPedido();
   const itens = cart.reduce((s,i)=>s+i.qty,0);
   let freteLinha = "";
-  if(freteInfo && !freteInfo.bloqueado){
-    const valorTaxa = freteInfo.taxa === 0 ? "Grátis" : brl(freteInfo.taxa);
-    freteLinha = `<div class="resumo-linha"><span>Taxa de entrega <small>(${kmFmt()} km)</small></span><span>${valorTaxa}</span></div>`;
+  if(freteInfo){
+    const valorTaxa = freteInfo.taxa === null ? "a combinar" : (freteInfo.taxa === 0 ? "Grátis" : brl(freteInfo.taxa));
+    freteLinha = `<div class="resumo-linha"><span>Taxa de entrega <small>(${esc(freteInfo.bairro)})</small></span><span>${valorTaxa}</span></div>`;
   }
   let html = `<div class="comanda">
     <button class="m-fechar" onclick="fecharModal()" aria-label="fechar">×</button>
@@ -737,9 +706,15 @@ function desenharCarrinho(){
     </div>
     <div class="campo">
       <label>Endereço de entrega</label>
-      <input id="inpEndereco" type="text" placeholder="Rua, nº, bairro e referência" value="${esc(enderecoSalvo)}" autocomplete="street-address">
-      <button type="button" class="btn-loc" id="btnLoc" onclick="usarLocalizacao()">📍 Usar minha localização (calcular frete)</button>
-      <div class="frete-gratis-hint">🎉 Frete grátis até 4 km da loja!</div>
+      <input id="inpEndereco" type="text" placeholder="Rua, nº e ponto de referência" value="${esc(enderecoSalvo)}" autocomplete="street-address">
+    </div>
+    <div class="campo">
+      <label>Bairro <span class="opc">(define a taxa de entrega)</span></label>
+      <select id="selBairro" onchange="selBairro(this.value)">
+        <option value="">Selecione seu bairro...</option>
+        ${BAIRROS.map(g => `<optgroup label="${g.grupo}">${g.itens.map(n => `<option value="${esc(n)}"${bairroSalvo===n?" selected":""}>${n}</option>`).join("")}</optgroup>`).join("")}
+      </select>
+      <div class="frete-gratis-hint">🎉 Grátis para Hauer, Boqueirão e Fanny!</div>
       <div id="freteStatus" class="${freteStatusClasse()}">${freteStatusTexto()}</div>
     </div>
     <div class="campo">
@@ -769,8 +744,8 @@ function desenharCarrinho(){
     </div>
     <div class="obs-frete">${
       freteInfo
-        ? (freteInfo.bloqueado ? "Poxa, você está fora da nossa área de entrega 😔" : "Frete calculado pela sua localização ✅")
-        : "Toque em <b>Usar minha localização</b> pra calcular o frete — ou a gente combina rapidinho no WhatsApp 🛵"
+        ? (freteInfo.taxa === null ? "Seu bairro tem taxa a combinar — confirmamos no WhatsApp 🛵" : "Taxa de entrega já incluída no total ✅")
+        : "Escolha seu <b>bairro</b> acima pra calcular a taxa de entrega 🛵"
     }</div>
     <div class="m-footer" style="background:none;padding:0;margin:0">
       <button class="btn-full" onclick="enviarWhatsapp()">🟢 Enviar pedido no WhatsApp</button>
@@ -824,15 +799,15 @@ function enviarWhatsapp(){
   const troco = (document.getElementById("inpTroco").value || "").trim();
   if(!nome){ alert("Escreve teu nome pra gente saber quem pediu 😄"); document.getElementById("inpNome").focus(); return; }
   if(!endereco){ alert("Coloca o endereço pra entrega chegar certinho 🛵"); document.getElementById("inpEndereco").focus(); return; }
+  if(!freteInfo){ alert("Escolhe o seu bairro pra calcular a entrega 🛵"); document.getElementById("selBairro").focus(); return; }
   if(!pagamentoSalvo){ alert("Escolhe a forma de pagamento 💳"); return; }
-  if(freteInfo && freteInfo.bloqueado){ alert("Infelizmente você está fora da nossa área de entrega 😔 (mais de 10 km da loja)"); return; }
 
   const subtotal = subtotalCart();
-  const taxa = taxaFrete();
   const total = totalPedido();
   let msg = `🍔 *NOVO PEDIDO — KSB Burger*\n\n`;
   msg += `👤 *Cliente:* ${nome}\n`;
-  msg += `📍 *Entrega:* ${endereco}\n\n`;
+  msg += `📍 *Entrega:* ${endereco}\n`;
+  msg += `🏘️ *Bairro:* ${freteInfo.bairro}\n\n`;
   msg += `*🧾 Itens do pedido:*\n`;
   cart.forEach(i=>{
     msg += `\n▪️ *${i.qty}x ${i.nome}* — ${brl(i.preco*i.qty)}\n`;
@@ -840,12 +815,12 @@ function enviarWhatsapp(){
   });
   msg += `\n———————————\n`;
   msg += `*Subtotal:* ${brl(subtotal)}\n`;
-  if(freteInfo && !freteInfo.bloqueado){
-    msg += `*Taxa de entrega* (${kmFmt()} km): ${freteInfo.taxa === 0 ? "Grátis" : brl(freteInfo.taxa)}\n`;
+  if(freteInfo.taxa === null){
+    msg += `*Taxa de entrega* (${freteInfo.bairro}): a combinar (R$ 10 a R$ 15)\n`;
   } else {
-    msg += `*Taxa de entrega:* a combinar\n`;
+    msg += `*Taxa de entrega* (${freteInfo.bairro}): ${freteInfo.taxa === 0 ? "Grátis" : brl(freteInfo.taxa)}\n`;
   }
-  msg += `*💰 TOTAL: ${brl(total)}*\n`;
+  msg += `*💰 TOTAL: ${brl(total)}*${freteInfo.taxa === null ? " + taxa" : ""}\n`;
   msg += `💳 *Pagamento:* ${pagamentoSalvo}\n`;
   if(pagamentoSalvo==="Dinheiro" && troco) msg += `    ↳ Troco pra ${troco}\n`;
   if(pagamentoSalvo==="PIX") msg += `    ↳ Chave PIX: ${PIX_CHAVE}\n`;
