@@ -2,13 +2,19 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KSB — Salgados & Burger · Cardápio</title>
 <meta name="theme-color" content="#0D0D0D">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  /* Fontes self-hosted (subset latin) — sem dependência de CDN */
+  @font-face{font-family:'Anton';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/anton-400.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/poppins-400.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/poppins-500.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/poppins-600.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/poppins-700.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Poppins';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/poppins-800.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Space Mono';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/spacemono-400.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+  @font-face{font-family:'Space Mono';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/spacemono-700.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
   :root{
     --carvao:#0D0D0D;
     --vinho:#5C0E12;
@@ -212,6 +218,7 @@
   .pix-chave button:active{transform:scale(.94)}
   .pix-obs{font-family:'Poppins';font-size:11.5px;color:var(--fumaca);margin-top:8px}
   .resumo-total{display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:1px}
+  .comanda .resumo-obs{font-family:'Poppins';font-size:12px;font-weight:700;color:var(--brasa);text-align:right;margin-top:2px}
   .resumo-total .rt-val{font-size:26px;color:var(--brasa)}
   .comanda .obs-frete{font-family:'Poppins';text-align:center;color:var(--fumaca);font-size:12px;margin:12px 0 4px}
   .comanda .btn-full{border-radius:14px;margin-top:6px}
@@ -389,6 +396,7 @@ const totalPedido  = () => subtotalCart() + taxaFrete();
 function selBairro(nome){
   freteInfo = nome ? { bairro: nome, taxa: BAIRRO_TAXA[nome] } : null;
   bairroSalvo = nome;
+  persistir();
   desenharCarrinho(); // redesenha com a taxa aplicada no resumo
 }
 function freteStatusClasse(){
@@ -400,6 +408,28 @@ function freteStatusTexto(){
   if(freteInfo.taxa === null) return `🛵 ${freteInfo.bairro}: taxa a combinar (entre R$ 10 e R$ 15) — confirmamos no WhatsApp.`;
   if(freteInfo.taxa === 0)    return `🎉 ${freteInfo.bairro}: entrega grátis!`;
   return `✅ ${freteInfo.bairro}: taxa de entrega ${brl(freteInfo.taxa)}`;
+}
+
+/* ================= PERSISTÊNCIA (localStorage) ================= */
+// Guarda o carrinho e os dados do checkout pra não perder tudo em um refresh no meio do pedido.
+const LS_KEY = "ksb_pedido_v1";
+function persistir(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      cart, nome: nomeSalvo, endereco: enderecoSalvo, bairro: bairroSalvo,
+      pag: pagamentoSalvo, troco: trocoSalvo, obs: obsSalvo
+    }));
+  }catch(e){/* modo privado / storage cheio — ignora */}
+}
+function restaurar(){
+  try{
+    const d = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+    if(!d) return;
+    if(Array.isArray(d.cart)) cart = d.cart;
+    nomeSalvo = d.nome || ""; enderecoSalvo = d.endereco || "";
+    obsSalvo = d.obs || ""; trocoSalvo = d.troco || ""; pagamentoSalvo = d.pag || "";
+    if(d.bairro && (d.bairro in BAIRRO_TAXA)){ bairroSalvo = d.bairro; freteInfo = { bairro: d.bairro, taxa: BAIRRO_TAXA[d.bairro] }; }
+  }catch(e){/* dados corrompidos — ignora */}
 }
 
 // thumb com foto real + fallback (jpg → png → emoji)
@@ -519,6 +549,7 @@ function addItem(key, nome, det, preco){
   if(existing){ existing.qty++; } else { cart.push({key, nome, det, preco, qty:1}); }
   atualizarBarra();
   flashBar();
+  persistir();
 }
 
 /* ================= MODAL PONTO (Kroc avulso) ================= */
@@ -700,6 +731,7 @@ function desenharCarrinho(){
     <div class="resumo-linha"><span>Subtotal</span><span>${brl(subtotal)}</span></div>
     ${freteLinha}
     <div class="resumo-total"><span>Total</span><span class="rt-val">${brl(total)}</span></div>
+    ${freteInfo && freteInfo.taxa === null ? `<div class="resumo-obs">+ taxa de entrega a combinar (R$ 10 a R$ 15)</div>` : ""}
     <div class="campo">
       <label>Seu nome</label>
       <input id="inpNome" type="text" placeholder="Ex: João" value="${esc(nomeSalvo)}" autocomplete="name">
@@ -732,7 +764,7 @@ function desenharCarrinho(){
           <div class="pix-label">Chave PIX (e-mail)</div>
           <div class="pix-chave">
             <span id="pixChave">${PIX_CHAVE}</span>
-            <button type="button" onclick="copiarPix()">Copiar</button>
+            <button type="button" onclick="copiarPix(this)">Copiar</button>
           </div>
           <div class="pix-obs">Faça o PIX e mande o comprovante junto com o pedido 💚</div>
         </div>
@@ -752,10 +784,10 @@ function desenharCarrinho(){
     </div>
   </div>`;
   box.innerHTML = html;
-  document.getElementById("inpNome").oninput = e => nomeSalvo = e.target.value;
-  document.getElementById("inpEndereco").oninput = e => enderecoSalvo = e.target.value;
-  document.getElementById("inpObs").oninput = e => obsSalvo = e.target.value;
-  document.getElementById("inpTroco").oninput = e => trocoSalvo = e.target.value;
+  document.getElementById("inpNome").oninput = e => { nomeSalvo = e.target.value; persistir(); };
+  document.getElementById("inpEndereco").oninput = e => { enderecoSalvo = e.target.value; persistir(); };
+  document.getElementById("inpObs").oninput = e => { obsSalvo = e.target.value; persistir(); };
+  document.getElementById("inpTroco").oninput = e => { trocoSalvo = e.target.value; persistir(); };
   // restaura pagamento escolhido ao redesenhar
   if(pagamentoSalvo){
     const alvo = document.querySelector(`.pag-opt[data-pag="${pagamentoSalvo}"]`);
@@ -772,9 +804,9 @@ function selPag(elem){
   pagamentoSalvo = elem.dataset.pag;
   document.getElementById("trocoBox").style.display = (pagamentoSalvo==="Dinheiro") ? "block" : "none";
   document.getElementById("pixBox").style.display = (pagamentoSalvo==="PIX") ? "block" : "none";
+  persistir();
 }
-function copiarPix(){
-  const btn = event.currentTarget;
+function copiarPix(btn){
   const done = () => { const t=btn.textContent; btn.textContent="Copiado!"; setTimeout(()=>btn.textContent=t,1600); };
   if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(PIX_CHAVE).then(done).catch(fallbackCopy); }
   else fallbackCopy();
@@ -787,6 +819,7 @@ function mudarQty(idx, d){
   cart[idx].qty += d;
   if(cart[idx].qty<=0) cart.splice(idx,1);
   atualizarBarra();
+  persistir();
   if(cart.length===0){ fecharModal(); return; }
   desenharCarrinho();
 }
@@ -842,6 +875,7 @@ document.addEventListener("contextmenu", e => e.preventDefault());
 document.addEventListener("dragstart", e => e.preventDefault());
 // duplo-toque já é neutralizado por touch-action:manipulation (sem quebrar toques)
 
+restaurar();
 render();
 atualizarBarra();
 </script>
