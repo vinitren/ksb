@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KSB — Salgados & Burger · Cardápio</title>
 <meta name="theme-color" content="#0D0D0D">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TY2ZWQRNV1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-TY2ZWQRNV1');
+</script>
+
+<!-- Microsoft Clarity -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xt8vdl1ijj");
+</script>
+
 <style>
   /* Fontes self-hosted (subset latin) — sem dependência de CDN */
   @font-face{font-family:'Anton';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/anton-400.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
@@ -463,22 +482,52 @@ function precoHTML(preco, precoDe){
   return brl(preco);
 }
 
+/* ================= ANALYTICS (GA4) ================= */
+// Helper seguro: se o gtag não carregou (adblock), não quebra nada.
+function track(name, params){
+  try{ if(window.gtag) window.gtag('event', name, params || {}); }catch(e){}
+}
+const mapPag = p => p==="PIX" ? "pix" : p==="Dinheiro" ? "dinheiro" : "cartao";
+function gerarOrderId(){
+  const L = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // sem I/O pra não confundir
+  return `#${L[Math.floor(Math.random()*L.length)]}${Math.floor(100 + Math.random()*900)}`;
+}
+// view_item: dispara UMA vez por item quando o card entra na tela (≥50%)
+const vistosGA = new Set();
+let viewObserver = null;
+function observarCard(elCard, dados){
+  if(!("IntersectionObserver" in window)) return;
+  if(!viewObserver){
+    viewObserver = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if(!en.isIntersecting) return;
+        const d = en.target._ga;
+        if(d && !vistosGA.has(d.item_id)){ vistosGA.add(d.item_id); track('view_item', d); }
+        viewObserver.unobserve(en.target);
+      });
+    }, { threshold: 0.5 });
+  }
+  elCard._ga = dados;
+  viewObserver.observe(elCard);
+}
+
 /* ================= RENDER MENU ================= */
 function render(){
   const m = document.getElementById("menu");
   m.innerHTML = "";
   if(PROMO.ativo) m.appendChild(el(`<div class="promo-bar">${PROMO.texto}</div>`));
   const on = arr => arr.filter(x => x.disp !== false); // esconde itens marcados como esgotados
+  const add = (elCard, dados) => { observarCard(elCard, dados); m.appendChild(elCard); }; // view_item
   m.appendChild(sectionHeader("lanches","🍔","Lanches Kroc","Artesanais, feitos na hora 🔥"));
-  on(LANCHES).forEach(p => m.appendChild(cardSimples(p, true))); // true = escolher ponto da carne
+  on(LANCHES).forEach(p => add(cardSimples(p, true), {item_id:p.id, item_name:p.nome, item_category:"lanche", price:p.preco})); // true = escolher ponto
   m.appendChild(sectionHeader("combos","🎯","Combos","Mais barato junto — e dá pra dividir."));
-  on(COMBOS).forEach(c => m.appendChild(cardCombo(c)));
+  on(COMBOS).forEach(c => add(cardCombo(c), {item_id:c.id, item_name:c.nome, item_category:"combo", price:c.base}));
   m.appendChild(sectionHeader("petiscos","🍟","Petiscos","Escolha o tamanho."));
-  on(PETISCOS).forEach(p => m.appendChild(cardVariante(p)));
+  on(PETISCOS).forEach(p => add(cardVariante(p,"petisco"), {item_id:p.id, item_name:p.nome, item_category:"petisco", price:p.variantes[0].preco}));
   m.appendChild(sectionHeader("sobremesas","🍩","Sobremesas","Pra fechar com chave de ouro."));
-  on(SOBREMESAS).forEach(p => m.appendChild(cardVariante(p)));
+  on(SOBREMESAS).forEach(p => add(cardVariante(p,"sobremesa"), {item_id:p.id, item_name:p.nome, item_category:"sobremesa", price:p.variantes[0].preco}));
   m.appendChild(sectionHeader("bebidas","🥤","Bebidas","Pra acompanhar."));
-  on(BEBIDAS).forEach(p => m.appendChild(cardSimples(p)));
+  on(BEBIDAS).forEach(p => add(cardSimples(p), {item_id:p.id, item_name:p.nome, item_category:"bebida", price:p.preco}));
 }
 
 function sectionHeader(id, emoji, titulo, desc){
@@ -503,7 +552,7 @@ function cardSimples(p, comPonto=false){
   return c;
 }
 
-function cardVariante(p){
+function cardVariante(p, categoria){
   const c = el(`<div class="card">
     ${badgeHTML(p)}
     ${thumb(p)}
@@ -520,7 +569,7 @@ function cardVariante(p){
       <span class="v-preco">${brl(v.preco)}</span>
       <button aria-label="adicionar ${p.nome} ${v.nome}">+</button>
     </div>`);
-    b.querySelector("button").onclick = () => addItem(`${p.id}-${v.nome}`, `${p.nome} (${v.nome})`, [], v.preco);
+    b.querySelector("button").onclick = () => addItem(`${p.id}-${v.nome}`, `${p.nome} (${v.nome})`, [], v.preco, {item_id:p.id, item_category:categoria});
     box.appendChild(b);
   });
   return c;
@@ -542,14 +591,17 @@ function cardCombo(c){
 }
 
 /* ================= ADICIONAR ================= */
-function addSimples(p){ addItem(p.id, p.nome, [], p.preco); }
-function addItem(key, nome, det, preco){
+function addSimples(p){ addItem(p.id, p.nome, [], p.preco, {item_id:p.id, item_category:"bebida"}); }
+function addItem(key, nome, det, preco, meta){
+  const item_id = (meta && meta.item_id) || key;
+  const item_category = (meta && meta.item_category) || "";
   const detKey = det.join("|");
   const existing = cart.find(i => i.key===key && i.det.join("|")===detKey);
-  if(existing){ existing.qty++; } else { cart.push({key, nome, det, preco, qty:1}); }
+  if(existing){ existing.qty++; } else { cart.push({key, nome, det, preco, qty:1, item_id, item_category}); }
   atualizarBarra();
   flashBar();
   persistir();
+  track('add_to_cart', { item_id, item_name:nome, item_category, price:preco, quantity:1, value:preco });
 }
 
 /* ================= MODAL PONTO (Kroc avulso) ================= */
@@ -577,7 +629,7 @@ function abrirPonto(p){
 }
 function addComPonto(){
   if(!pontoSel){ alert("Escolhe o ponto da carne 🔥"); return; }
-  addItem(pontoAtual.id + "-" + pontoSel, pontoAtual.nome, ["Ponto: " + pontoSel], pontoAtual.preco);
+  addItem(pontoAtual.id + "-" + pontoSel, pontoAtual.nome, ["Ponto: " + pontoSel], pontoAtual.preco, {item_id:pontoAtual.id, item_category:"lanche"});
   fecharModal();
 }
 
@@ -666,7 +718,7 @@ function addCombo(){
   det.push(`Acompanhamento: ${comboSel.acomp.nome}`);
   det.push(`Bebida: ${comboAtual.bebida}`);
   const key = comboAtual.id + "-" + comboSel.lanches.join(",") + "-" + comboSel.pontos.join(",") + "-" + comboSel.acomp.id;
-  addItem(key, comboAtual.nome, det, precoCombo());
+  addItem(key, comboAtual.nome, det, precoCombo(), {item_id:comboAtual.id, item_category:"combo"});
   fecharModal();
 }
 
@@ -685,7 +737,10 @@ function flashBar(){
   clearTimeout(flashT); flashT=setTimeout(()=>btn.style.transform="",150);
 }
 
-function abrirCarrinho(){ desenharCarrinho(); abrirOverlay(); }
+function abrirCarrinho(){
+  desenharCarrinho(); abrirOverlay();
+  track('begin_checkout', { value: subtotalCart(), num_items: cart.reduce((s,i)=>s+i.qty,0) });
+}
 function desenharCarrinho(){
   const box = document.getElementById("modalBox");
   box.classList.add("comanda-wrap");
@@ -805,6 +860,7 @@ function selPag(elem){
   document.getElementById("trocoBox").style.display = (pagamentoSalvo==="Dinheiro") ? "block" : "none";
   document.getElementById("pixBox").style.display = (pagamentoSalvo==="PIX") ? "block" : "none";
   persistir();
+  track('add_payment_info', { payment_type: mapPag(pagamentoSalvo) });
 }
 function copiarPix(btn){
   const done = () => { const t=btn.textContent; btn.textContent="Copiado!"; setTimeout(()=>btn.textContent=t,1600); };
@@ -835,9 +891,17 @@ function enviarWhatsapp(){
   if(!freteInfo){ alert("Escolhe o seu bairro pra calcular a entrega 🛵"); document.getElementById("selBairro").focus(); return; }
   if(!pagamentoSalvo){ alert("Escolhe a forma de pagamento 💳"); return; }
 
+  // --- validações OK: gera o ID do pedido e registra a conversão (proxy) ---
+  const orderId = gerarOrderId();
   const subtotal = subtotalCart();
   const total = totalPedido();
-  let msg = `🍔 *NOVO PEDIDO — KSB Burger*\n\n`;
+  track('generate_lead', {
+    value: total, currency: "BRL",
+    items: cart.map(i => ({ item_id:i.item_id||i.key, item_name:i.nome, item_category:i.item_category||"", price:i.preco, quantity:i.qty })),
+    bairro: freteInfo.bairro, payment_type: mapPag(pagamentoSalvo), order_id: orderId
+  });
+
+  let msg = `🍔 *NOVO PEDIDO — KSB Burger*\n*Pedido ${orderId}*\n\n`;
   msg += `👤 *Cliente:* ${nome}\n`;
   msg += `📍 *Entrega:* ${endereco}\n`;
   msg += `🏘️ *Bairro:* ${freteInfo.bairro}\n\n`;
