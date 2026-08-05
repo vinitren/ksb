@@ -260,6 +260,29 @@
   /* selo/hint de frete grátis no checkout */
   .frete-gratis-hint{font-family:'Poppins';font-size:12px;font-weight:700;color:#7ee081;text-align:center;margin-top:8px}
 
+  /* ---------- Status de funcionamento (aberto / fechado) ---------- */
+  .status-bar{
+    max-width:640px;margin:0 auto 14px;padding:11px 16px;border-radius:14px;
+    font-family:'Poppins';font-weight:800;font-size:13.5px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  .status-bar .sb-linha{display:flex;align-items:center;justify-content:center;gap:8px}
+  .status-bar .sb-sub{font-weight:500;font-size:12px;color:var(--fumaca)}
+  .status-bar .ponto{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+  .status-bar.aberto{background:rgba(31,168,79,.13);border:1px solid rgba(31,168,79,.5);color:#7ee081}
+  .status-bar.aberto .ponto{background:#1fa84f;animation:piscar 2s ease-in-out infinite}
+  .status-bar.fechado{background:rgba(224,30,43,.13);border:1px solid rgba(224,30,43,.5);color:#ff8a8a}
+  .status-bar.fechado .ponto{background:#e01e2b}
+  @keyframes piscar{0%,100%{opacity:1}50%{opacity:.35}}
+  /* aviso + botão travado no checkout */
+  .fechado-aviso{
+    font-family:'Poppins';font-size:13px;font-weight:600;line-height:1.45;text-align:center;
+    color:#ff8a8a;background:rgba(224,30,43,.12);border:1.5px dashed rgba(255,138,138,.5);
+    border-radius:12px;padding:13px 14px;margin-bottom:10px;
+  }
+  .btn-full:disabled{background:rgba(255,255,255,.1);color:var(--fumaca);box-shadow:none;cursor:not-allowed}
+  .btn-full:disabled:active{transform:none}
+
   /* ---------- Seção apps (iFood / 99Food) ---------- */
   .apps-sec{max-width:640px;margin:8px auto 0;padding:26px 20px 6px;text-align:center}
   .apps-titulo{font-family:'Anton';font-size:22px;color:#fff;text-transform:uppercase;letter-spacing:.5px}
@@ -311,6 +334,7 @@
 
 <footer>
   <div class="canais">WHATSAPP · IFOOD · 99FOOD</div>
+  <div>⏰ Todos os dias, das 19h às 23h45</div>
   <div>KSB — Salgados &amp; Burger</div>
   <div class="bordao">PEÇA SEM SAIR DE CASA!</div>
 </footer>
@@ -335,6 +359,43 @@ const PIX_CHAVE = "Krocsalimentos@gmail.com"; // chave PIX (e-mail)
 const PONTOS = ["Ao ponto", "Bem passado", "Mal passado"]; // ponto da carne
 // Banner de promoção no topo — troque o texto ou ponha ativo:false pra esconder
 const PROMO = { ativo: true, texto: "🔥 FRETE GRÁTIS para Hauer, Boqueirão e Fanny!" };
+
+/* ===== Horário de funcionamento — domingo a domingo, 19:00 às 23:45 ===== */
+// Pra mudar o horário, é só editar aqui (formato "HH:MM").
+const HORARIO = { abre: "19:00", fecha: "23:45", texto: "Todos os dias, das 19h às 23h45" };
+const FECHADO_MSG = `A empresa está fechada. Voltamos às ${HORARIO.abre} para você concluir o pedido.`;
+
+const hhmmEmMin = hhmm => { const [h,m] = hhmm.split(":").map(Number); return h*60 + m; };
+// hora da loja (Brasília) — não depende do relógio/fuso do celular do cliente
+function minutosAgora(){
+  try{
+    const f = new Intl.DateTimeFormat("pt-BR", { timeZone:"America/Sao_Paulo", hour:"2-digit", minute:"2-digit", hourCycle:"h23" });
+    const [h,m] = f.format(new Date()).split(":").map(Number);
+    return (h % 24)*60 + m;
+  }catch(e){
+    const d = new Date(); return d.getHours()*60 + d.getMinutes(); // fallback: hora do aparelho
+  }
+}
+function lojaAberta(){
+  const agora = minutosAgora(), abre = hhmmEmMin(HORARIO.abre), fecha = hhmmEmMin(HORARIO.fecha);
+  return abre <= fecha
+    ? (agora >= abre && agora < fecha)
+    : (agora >= abre || agora < fecha); // caso o horário vire a meia-noite
+}
+function statusBarHTML(){
+  return lojaAberta()
+    ? `<div class="status-bar aberto" id="statusBar">
+         <div class="sb-linha"><span class="ponto"></span> Aberto agora — pedidos até ${HORARIO.fecha.replace(":","h")}</div>
+       </div>`
+    : `<div class="status-bar fechado" id="statusBar">
+         <div class="sb-linha"><span class="ponto"></span> Fechado agora — abrimos às ${HORARIO.abre}</div>
+         <div class="sb-sub">${HORARIO.texto} · monte seu pedido que a gente guarda 😉</div>
+       </div>`;
+}
+function atualizarStatus(){
+  const atual = document.getElementById("statusBar");
+  if(atual) atual.outerHTML = statusBarHTML();
+}
 
 const LANCHES = [
   {id:"classic", nome:"KROC CLASSIC", desc:"Pão brioche, molho da casa, hambúrguer 100g e cheddar fatiado.", preco:18.90, emoji:"🍔", img:"kroc-classic"},
@@ -515,6 +576,7 @@ function observarCard(elCard, dados){
 function render(){
   const m = document.getElementById("menu");
   m.innerHTML = "";
+  m.appendChild(el(statusBarHTML()));
   if(PROMO.ativo) m.appendChild(el(`<div class="promo-bar">${PROMO.texto}</div>`));
   const on = arr => arr.filter(x => x.disp !== false); // esconde itens marcados como esgotados
   const add = (elCard, dados) => { observarCard(elCard, dados); m.appendChild(elCard); }; // view_item
@@ -835,7 +897,10 @@ function desenharCarrinho(){
         : "Escolha seu <b>bairro</b> acima pra calcular a taxa de entrega 🛵"
     }</div>
     <div class="m-footer" style="background:none;padding:0;margin:0">
-      <button class="btn-full" onclick="enviarWhatsapp()">🟢 Enviar pedido no WhatsApp</button>
+      ${lojaAberta()
+        ? `<button class="btn-full" onclick="enviarWhatsapp()">🟢 Enviar pedido no WhatsApp</button>`
+        : `<div class="fechado-aviso">🔒 ${FECHADO_MSG}</div>
+           <button class="btn-full" disabled>Fechado agora</button>`}
     </div>
   </div>`;
   box.innerHTML = html;
@@ -882,6 +947,7 @@ function mudarQty(idx, d){
 
 /* ================= WHATSAPP ================= */
 function enviarWhatsapp(){
+  if(!lojaAberta()){ alert(FECHADO_MSG); desenharCarrinho(); return; } // trava fora do horário
   const nome = (document.getElementById("inpNome").value || "").trim();
   const endereco = (document.getElementById("inpEndereco").value || "").trim();
   const obs = (document.getElementById("inpObs").value || "").trim();
@@ -942,6 +1008,17 @@ document.addEventListener("dragstart", e => e.preventDefault());
 restaurar();
 render();
 atualizarBarra();
+
+/* Vira de fechado pra aberto (e vice-versa) sem precisar recarregar a página */
+let abertoAgora = lojaAberta();
+setInterval(() => {
+  const estado = lojaAberta();
+  if(estado === abertoAgora) return;
+  abertoAgora = estado;
+  atualizarStatus();
+  const overlayAberto = document.getElementById("overlay").classList.contains("open");
+  if(overlayAberto && cart.length) desenharCarrinho(); // atualiza o botão da comanda
+}, 30000);
 </script>
 </body>
 </html>
